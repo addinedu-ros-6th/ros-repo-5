@@ -4,6 +4,7 @@ import resource_rc
 from PyQt5.QtWidgets import QHeaderView
 from login import LoginWindow 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -11,8 +12,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         
         uic.loadUi('gui.ui', self)
-        #트럭이미지 중앙으로 배치 
-        self.verticalLayout.setAlignment(self.label, Qt.AlignHCenter)
+
         # stack widget 버튼 이동
         self.main_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
         self.call_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
@@ -21,6 +21,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         #로그아웃버튼
         self.logout_button.clicked.connect(self.logout)
+        pixmap = QPixmap('virtual_map.png')
+        self.virtual_map.setPixmap(pixmap)
+        self.virtual_map.setScaledContents(True)
 
     def logout(self):
         self.hide()

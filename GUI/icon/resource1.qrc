@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="newPrefix">
+    <file>phone.svg</file>
     <file>battery.svg</file>
     <file>battery-charging.svg</file>
     <file>book-open.svg</file>
