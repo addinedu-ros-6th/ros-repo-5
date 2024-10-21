@@ -1,0 +1,749 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1502</width>
+    <height>902</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: rgb(245,250,254);</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="icon_setting_widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>177</width>
+      <height>871</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QWidget{
+	background-color: rgb(153, 193, 241);
+}
+QPushButton{
+	
+}</string>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QLabel {
+    qproperty-alignment: AlignCenter;
+}</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap resource="icon/resource1.qrc">:/newPrefix/track.png</pixmap>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="main_button">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>24</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Main</string>
+         </property>
+         <property name="icon">
+          <iconset resource="icon/resource1.qrc">
+           <normaloff>:/newPrefix/map.svg</normaloff>:/newPrefix/map.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="call_button">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>24</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Call</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="log_button">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>24</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Log</string>
+         </property>
+         <property name="icon">
+          <iconset resource="icon/resource1.qrc">
+           <normaloff>:/newPrefix/book-open.svg</normaloff>:/newPrefix/book-open.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>320</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="logout_button">
+       <property name="minimumSize">
+        <size>
+         <width>159</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>22</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Logout</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QStackedWidget" name="stackedWidget">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>10</y>
+      <width>1281</width>
+      <height>871</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(240, 245, 254);</string>
+    </property>
+    <widget class="QWidget" name="Main">
+     <widget class="QLabel" name="map">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>1251</width>
+        <height>671</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: 2px solid black;</string>
+      </property>
+      <property name="text">
+       <string>Map</string>
+      </property>
+     </widget>
+     <widget class="QTableWidget" name="tableWidget">
+      <property name="geometry">
+       <rect>
+        <x>790</x>
+        <y>20</y>
+        <width>461</width>
+        <height>151</height>
+       </rect>
+      </property>
+      <column>
+       <property name="text">
+        <string>user_id</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>job</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>761</width>
+        <height>151</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QWidget" name="widget_3" native="true">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(98, 160, 234);</string>
+         </property>
+         <widget class="QWidget" name="layoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>40</y>
+            <width>321</width>
+            <height>81</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="robot1_status_1">
+             <property name="text">
+              <string>robot status</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="robot1_battery_1">
+             <property name="text">
+              <string>robot battery</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="robot1_job_1">
+             <property name="text">
+              <string>robot job</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_4" native="true">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(98, 160, 234);</string>
+         </property>
+         <widget class="QWidget" name="layoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>40</y>
+            <width>311</width>
+            <height>81</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLabel" name="robot2_status_1">
+             <property name="text">
+              <string>robot2 status</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="robot2_battery_1">
+             <property name="text">
+              <string>robot2 battery</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="robot2_job_1">
+             <property name="text">
+              <string>robot2 job</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="Call">
+     <widget class="QTableWidget" name="tableWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>850</x>
+        <y>10</y>
+        <width>401</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <column>
+       <property name="text">
+        <string>user_id</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>job</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>10</y>
+        <width>811</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QWidget" name="widget" native="true">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(98, 160, 234);</string>
+         </property>
+         <widget class="QLabel" name="robot1_status_2">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>40</y>
+            <width>101</width>
+            <height>61</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>robot status</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="robot1_battery_2">
+          <property name="geometry">
+           <rect>
+            <x>160</x>
+            <y>40</y>
+            <width>101</width>
+            <height>61</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>robot battery</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="robot1_job_2">
+          <property name="geometry">
+           <rect>
+            <x>310</x>
+            <y>40</y>
+            <width>101</width>
+            <height>61</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>robot job</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_2" native="true">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(98, 160, 234);</string>
+         </property>
+         <widget class="QLabel" name="robot2_status_2">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>40</y>
+            <width>101</width>
+            <height>61</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>robot2 status</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="robot2_battery_2">
+          <property name="geometry">
+           <rect>
+            <x>160</x>
+            <y>40</y>
+            <width>101</width>
+            <height>61</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>robot2 battery</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="robot2_job_2">
+          <property name="geometry">
+           <rect>
+            <x>310</x>
+            <y>40</y>
+            <width>101</width>
+            <height>61</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>robot2 job</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QCheckBox" name="section_box_1">
+      <property name="geometry">
+       <rect>
+        <x>750</x>
+        <y>460</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Section_1</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="section_box_2">
+      <property name="geometry">
+       <rect>
+        <x>530</x>
+        <y>350</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Section_3</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="section_box_3">
+      <property name="geometry">
+       <rect>
+        <x>490</x>
+        <y>460</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Section_2</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="section_box_4">
+      <property name="geometry">
+       <rect>
+        <x>510</x>
+        <y>400</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Section_4</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="section_box_5">
+      <property name="geometry">
+       <rect>
+        <x>750</x>
+        <y>370</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Section_5</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="section_box_6">
+      <property name="geometry">
+       <rect>
+        <x>750</x>
+        <y>420</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Section_6</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="virtual_map">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>170</y>
+        <width>1221</width>
+        <height>671</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>map</string>
+      </property>
+     </widget>
+     <zorder>tableWidget_2</zorder>
+     <zorder>layoutWidget</zorder>
+     <zorder>virtual_map</zorder>
+     <zorder>section_box_5</zorder>
+     <zorder>section_box_4</zorder>
+     <zorder>section_box_2</zorder>
+     <zorder>section_box_6</zorder>
+     <zorder>section_box_3</zorder>
+     <zorder>section_box_1</zorder>
+    </widget>
+    <widget class="QWidget" name="Log">
+     <widget class="QTableWidget" name="tableWidget_3">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>1241</width>
+        <height>791</height>
+       </rect>
+      </property>
+      <column>
+       <property name="text">
+        <string>datetime</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>job_id</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>job_status</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>goal_name</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>robot_name</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>robot_status</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>user_name</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>12</x>
+        <y>16</y>
+        <width>1231</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QComboBox" name="robot_name_box">
+         <item>
+          <property name="text">
+           <string>Robot_name</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>all</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>robot_1</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>robot_2</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDateEdit" name="start_date">
+         <property name="minimumDateTime">
+          <datetime>
+           <hour>0</hour>
+           <minute>0</minute>
+           <second>0</second>
+           <year>2024</year>
+           <month>9</month>
+           <day>14</day>
+          </datetime>
+         </property>
+         <property name="displayFormat">
+          <string>MM/dd/yyyy</string>
+         </property>
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>~</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDateEdit" name="end_date">
+         <property name="minimumDateTime">
+          <datetime>
+           <hour>0</hour>
+           <minute>0</minute>
+           <second>0</second>
+           <year>2024</year>
+           <month>9</month>
+           <day>14</day>
+          </datetime>
+         </property>
+         <property name="displayFormat">
+          <string>MM/dd/yyyy</string>
+         </property>
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="search_type_box">
+         <item>
+          <property name="text">
+           <string>Search Type</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>job_id</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>user_name</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string/>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="search_text">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="search_button">
+         <property name="text">
+          <string>Search Button</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <resources>
+  <include location="icon/resource1.qrc"/>
+ </resources>
+ <connections/>
+</ui>
