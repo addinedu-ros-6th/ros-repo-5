@@ -91,7 +91,7 @@ QPushButton{
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="icon/resource1.qrc">:/newPrefix/track.png</pixmap>
+          <pixmap>:/newPrefix/track.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -143,7 +143,7 @@ QPushButton{
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>191</x>
@@ -156,9 +156,9 @@ QPushButton{
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
-        <widget class="QCheckBox" name="call_btn_1">
+        <widget class="QCheckBox" name="checkbox_basket_1">
          <property name="text">
-          <string>trash_1</string>
+          <string>basket_1</string>
          </property>
         </widget>
        </item>
@@ -174,9 +174,9 @@ QPushButton{
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_5">
        <item>
-        <widget class="QCheckBox" name="call_btn_2">
+        <widget class="QCheckBox" name="checkbox_basket_2">
          <property name="text">
-          <string>trash_2</string>
+          <string>basket_2</string>
          </property>
         </widget>
        </item>
@@ -192,9 +192,9 @@ QPushButton{
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
-        <widget class="QCheckBox" name="call_btn_3">
+        <widget class="QCheckBox" name="checkbox_basket_3">
          <property name="text">
-          <string>trash_3</string>
+          <string>basket_3</string>
          </property>
         </widget>
        </item>
@@ -210,9 +210,9 @@ QPushButton{
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
-        <widget class="QCheckBox" name="call_btn_4">
+        <widget class="QCheckBox" name="checkbox_basket_4">
          <property name="text">
-          <string>trash_4</string>
+          <string>basket_4</string>
          </property>
         </widget>
        </item>
@@ -228,9 +228,9 @@ QPushButton{
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QCheckBox" name="call_btn_5">
+        <widget class="QCheckBox" name="checkbox_basket_5">
          <property name="text">
-          <string>trash_5</string>
+          <string>basket_5</string>
          </property>
         </widget>
        </item>
@@ -246,9 +246,9 @@ QPushButton{
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QCheckBox" name="call_btn_6">
+        <widget class="QCheckBox" name="checkbox_basket_6">
          <property name="text">
-          <string>trash_6</string>
+          <string>basket_6</string>
          </property>
         </widget>
        </item>

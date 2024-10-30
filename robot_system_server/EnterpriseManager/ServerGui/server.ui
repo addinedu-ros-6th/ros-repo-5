@@ -91,7 +91,7 @@ QPushButton{
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="icon/resource1.qrc">:/newPrefix/track.png</pixmap>
+          <pixmap>:/newPrefix/track.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -138,7 +138,7 @@ QPushButton{
           <string>Map</string>
          </property>
          <property name="icon">
-          <iconset resource="icon/resource1.qrc">
+          <iconset>
            <normaloff>:/newPrefix/map.svg</normaloff>:/newPrefix/map.svg</iconset>
          </property>
          <property name="iconSize">
@@ -166,7 +166,7 @@ QPushButton{
           <string>Call</string>
          </property>
          <property name="icon">
-          <iconset resource="icon/resource1.qrc">
+          <iconset>
            <normaloff>:/newPrefix/phone.svg</normaloff>:/newPrefix/phone.svg</iconset>
          </property>
          <property name="iconSize">
@@ -194,7 +194,7 @@ QPushButton{
           <string>Log</string>
          </property>
          <property name="icon">
-          <iconset resource="icon/resource1.qrc">
+          <iconset>
            <normaloff>:/newPrefix/book-open.svg</normaloff>:/newPrefix/book-open.svg</iconset>
          </property>
          <property name="iconSize">
@@ -587,7 +587,7 @@ QPushButton{
        </item>
       </layout>
      </widget>
-     <widget class="QCheckBox" name="section_box_1">
+     <widget class="QCheckBox" name="checkbox_basket_6">
       <property name="geometry">
        <rect>
         <x>1050</x>
@@ -597,10 +597,10 @@ QPushButton{
        </rect>
       </property>
       <property name="text">
-       <string>Section_1</string>
+       <string>basket_6</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="section_box_2">
+     <widget class="QCheckBox" name="checkbox_basket_5">
       <property name="geometry">
        <rect>
         <x>570</x>
@@ -610,10 +610,10 @@ QPushButton{
        </rect>
       </property>
       <property name="text">
-       <string>Section_3</string>
+       <string>basket_5</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="section_box_3">
+     <widget class="QCheckBox" name="checkbox_basket_3">
       <property name="geometry">
        <rect>
         <x>1090</x>
@@ -623,10 +623,10 @@ QPushButton{
        </rect>
       </property>
       <property name="text">
-       <string>Section_2</string>
+       <string>basket_3</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="section_box_4">
+     <widget class="QCheckBox" name="checkbox_basket_2">
       <property name="geometry">
        <rect>
         <x>540</x>
@@ -636,10 +636,10 @@ QPushButton{
        </rect>
       </property>
       <property name="text">
-       <string>Section_4</string>
+       <string>basket_2</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="section_box_5">
+     <widget class="QCheckBox" name="checkbox_basket_4">
       <property name="geometry">
        <rect>
         <x>80</x>
@@ -649,10 +649,10 @@ QPushButton{
        </rect>
       </property>
       <property name="text">
-       <string>Section_5</string>
+       <string>basket_4</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="section_box_6">
+     <widget class="QCheckBox" name="checkbox_basket_1">
       <property name="geometry">
        <rect>
         <x>130</x>
@@ -662,7 +662,7 @@ QPushButton{
        </rect>
       </property>
       <property name="text">
-       <string>Section_6</string>
+       <string>basket_1</string>
       </property>
      </widget>
      <widget class="QLabel" name="virtual_map">
@@ -681,12 +681,12 @@ QPushButton{
      <zorder>tableWidget_2</zorder>
      <zorder>layoutWidget</zorder>
      <zorder>virtual_map</zorder>
-     <zorder>section_box_5</zorder>
-     <zorder>section_box_4</zorder>
-     <zorder>section_box_2</zorder>
-     <zorder>section_box_6</zorder>
-     <zorder>section_box_3</zorder>
-     <zorder>section_box_1</zorder>
+     <zorder>checkbox_basket_4</zorder>
+     <zorder>checkbox_basket_2</zorder>
+     <zorder>checkbox_basket_5</zorder>
+     <zorder>checkbox_basket_1</zorder>
+     <zorder>checkbox_basket_3</zorder>
+     <zorder>checkbox_basket_6</zorder>
     </widget>
     <widget class="QWidget" name="Log">
      <widget class="QTableWidget" name="tableWidget_3">
@@ -868,8 +868,6 @@ QPushButton{
    </widget>
   </widget>
  </widget>
- <resources>
-  <include location="icon/resource1.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
