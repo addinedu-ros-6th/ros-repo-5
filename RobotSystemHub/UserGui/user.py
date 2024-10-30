@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, uic
 import sys
 import socket
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
+import mysql.connector
 
 class ClientThread(QThread):
     message_received = pyqtSignal(str)  # 메시지 수신 신호
@@ -45,6 +46,7 @@ class UserWindow(QtWidgets.QMainWindow):
         self.login_window = login_window
         
         uic.loadUi('RobotSystemHub/UserGui/user.ui', self)
+        self.employee_number = self.login_window.text_id.text() 
         
         self.checkbox_list = [self.checkbox_basket_1, self.checkbox_basket_2, self.checkbox_basket_3,
                               self.checkbox_basket_4, self.checkbox_basket_5, self.checkbox_basket_6]
@@ -63,6 +65,70 @@ class UserWindow(QtWidgets.QMainWindow):
         self.checkbox_basket_4.stateChanged.connect(self.checkbox_basket_4_changed)
         self.checkbox_basket_5.stateChanged.connect(self.checkbox_basket_5_changed)
         self.checkbox_basket_6.stateChanged.connect(self.checkbox_basket_6_changed)
+
+        # db연동 
+        self.db_config = {
+            'host': "database-1.cpog6osggiv3.ap-northeast-2.rds.amazonaws.com",
+            'user': "arduino_PJT",
+            'password': "1234",
+            'database': "ardumension"
+        }
+        self.db_connection = None
+        self.connect_to_database()
+        if self.db_connection:
+            self.initialize_checkboxes()
+    def connect_to_database(self):
+        try:
+            self.db_connection = mysql.connector.connect(**self.db_config)
+            print("데이터베이스에 연결되었습니다.")
+            return True
+        except mysql.connector.Error as e:
+            print(f"데이터베이스 연결 오류: {e}")
+            self.db_connection = None
+            return False
+        
+    def initialize_checkboxes(self):
+        try:
+            cursor = self.db_connection.cursor(dictionary=True)
+            
+            # 현재 사용자의 id 조회
+            user_query = """
+                SELECT id FROM RobotUser
+                WHERE employee_number = %s
+            """
+            cursor.execute(user_query, (self.employee_number,))
+            user_result = cursor.fetchone()
+            
+            if user_result:
+                # 모든 체크박스를 먼저 disable
+                for checkbox in self.checkbox_list:
+                    checkbox.setEnabled(False)
+
+                # 사용자의 할당된 basket 조회
+                basket_query = """
+                    SELECT np.name, np.id
+                    FROM Userbasket ub
+                    JOIN NavigationPoint np ON ub.navigation_point_id = np.id
+                    WHERE ub.user_id = %s
+                """
+                cursor.execute(basket_query, (user_result['id'],))
+                assigned_baskets = cursor.fetchall()
+        
+                # 할당된 basket만 enable
+                for basket in assigned_baskets:
+                    try:
+                        basket_num = int(''.join(filter(str.isdigit, basket['name'])))
+                        if 1 <= basket_num <= len(self.checkbox_list):
+                            self.checkbox_list[basket_num-1].setEnabled(True)
+                    except ValueError:
+                        continue
+
+            cursor.close()
+
+        except mysql.connector.Error as e:
+            error_msg = f"체크박스 초기화 오류: {e}"
+            print(error_msg)
+            QtWidgets.QMessageBox.warning(self, "데이터베이스 오류", error_msg)
 
     def send_message(self, message):
         # 메세지 전송
@@ -89,7 +155,8 @@ class UserWindow(QtWidgets.QMainWindow):
         self.login_window.text_id.clear()
         self.login_window.text_password.clear()
         self.login_window.show()
-
+        self.db_connection.close()
+        
     def checkbox_basket_1_changed(self):
         print("basket_1 clicked")
         if self.checkbox_basket_1.isChecked() == True :
