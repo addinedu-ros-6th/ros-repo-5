@@ -5,6 +5,7 @@ import os
 import mysql.connector
 import hashlib
 
+
 # Python 경로에 필요한 디렉토리 추가
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -90,6 +91,7 @@ class LoginWindow(QtWidgets.QMainWindow):
                     if role.lower() == 'admin':
                         self.main_window.show()
                     else:
+                        self.user_window = UserWindow(self)
                         self.user_window.show()
             else:
                 QtWidgets.QMessageBox.warning(
