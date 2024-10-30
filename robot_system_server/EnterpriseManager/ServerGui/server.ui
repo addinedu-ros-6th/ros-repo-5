@@ -1,1 +1,670 @@
-
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1502</width>
+    <height>902</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: rgb(245,250,254);</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="icon_setting_widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>177</width>
+      <height>871</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QWidget{
+	background-color: rgb(153, 193, 241);
+}
+QPushButton{
+	
+}</string>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>13</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QLabel {
+    qproperty-alignment: AlignCenter;
+}</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap>:/newPrefix/track.png</pixmap>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>13</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="main_button">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>24</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Map</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>:/newPrefix/map.svg</normaloff>:/newPrefix/map.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="call_button">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>24</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Call</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>:/newPrefix/phone.svg</normaloff>:/newPrefix/phone.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="log_button">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>24</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Log</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>:/newPrefix/book-open.svg</normaloff>:/newPrefix/book-open.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>320</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="logout_button">
+       <property name="minimumSize">
+        <size>
+         <width>159</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>22</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Logout</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QStackedWidget" name="stackedWidget">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>10</y>
+      <width>1281</width>
+      <height>871</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(240, 245, 254);</string>
+    </property>
+    <widget class="QWidget" name="Map">
+     <widget class="QLabel" name="map">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>1251</width>
+        <height>671</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: 2px solid black;</string>
+      </property>
+      <property name="text">
+       <string>Map</string>
+      </property>
+     </widget>
+     <widget class="QTableWidget" name="tableWidget">
+      <property name="geometry">
+       <rect>
+        <x>790</x>
+        <y>20</y>
+        <width>471</width>
+        <height>151</height>
+       </rect>
+      </property>
+      <column>
+       <property name="text">
+        <string>user_id</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>job</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>761</width>
+        <height>151</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QWidget" name="widget_3" native="true">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(98, 160, 234);</string>
+         </property>
+         <widget class="QWidget" name="layoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>40</y>
+            <width>321</width>
+            <height>81</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="robot1_status_1">
+             <property name="text">
+              <string>robot status</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="robot1_battery_1">
+             <property name="text">
+              <string>robot battery</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="robot1_job_1">
+             <property name="text">
+              <string>robot job</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QLabel" name="label_3">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>81</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>13</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Robot_1</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_4" native="true">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(98, 160, 234);</string>
+         </property>
+         <widget class="QWidget" name="layoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>40</y>
+            <width>311</width>
+            <height>81</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLabel" name="robot2_status_1">
+             <property name="text">
+              <string>robot2 status</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="robot2_battery_1">
+             <property name="text">
+              <string>robot2 battery</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="robot2_job_1">
+             <property name="text">
+              <string>robot2 job</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QLabel" name="label_4">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>91</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>13</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Robot_2</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="Call">
+     <widget class="QCheckBox" name="checkbox_basket_1">
+      <property name="geometry">
+       <rect>
+        <x>1050</x>
+        <y>650</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>basket_1</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkbox_basket_2">
+      <property name="geometry">
+       <rect>
+        <x>570</x>
+        <y>640</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>basket_2</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkbox_basket_3">
+      <property name="geometry">
+       <rect>
+        <x>1090</x>
+        <y>230</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>basket_3</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkbox_basket_4">
+      <property name="geometry">
+       <rect>
+        <x>540</x>
+        <y>230</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>basket_4</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkbox_basket_5">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>600</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>basket_5</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkbox_basket_6">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>230</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>basket_6</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="virtual_map">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>30</y>
+        <width>1221</width>
+        <height>811</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>map</string>
+      </property>
+     </widget>
+     <zorder>virtual_map</zorder>
+     <zorder>checkbox_basket_5</zorder>
+     <zorder>checkbox_basket_4</zorder>
+     <zorder>checkbox_basket_2</zorder>
+     <zorder>checkbox_basket_6</zorder>
+     <zorder>checkbox_basket_3</zorder>
+     <zorder>checkbox_basket_1</zorder>
+    </widget>
+    <widget class="QWidget" name="Log">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>1261</width>
+        <height>851</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <widget class="QWidget" name="JobLog">
+       <attribute name="title">
+        <string>JobLog</string>
+       </attribute>
+       <widget class="QTableWidget" name="job_table">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>70</y>
+          <width>1251</width>
+          <height>741</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>datetime</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>job_id</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>job_status</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>navigation_point</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>user_name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>robot_name</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="RobotStatusLog">
+       <attribute name="title">
+        <string>RobotStatusLog</string>
+       </attribute>
+       <widget class="QTableWidget" name="robot_status_table">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>70</y>
+          <width>1231</width>
+          <height>741</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>datetime</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>job_id</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>robot_status</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>job_id</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>navigation_point</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="JobErrorLog">
+       <attribute name="title">
+        <string>JobErrorLog</string>
+       </attribute>
+       <widget class="QTableWidget" name="job_error_table">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>70</y>
+          <width>1231</width>
+          <height>741</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>datetime</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>job_id</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>robot_name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>error_type</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>aruco_id</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
