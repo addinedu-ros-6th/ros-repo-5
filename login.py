@@ -5,7 +5,6 @@ import os
 import mysql.connector
 import hashlib
 
-
 # Python 경로에 필요한 디렉토리 추가
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -24,10 +23,6 @@ class LoginWindow(QtWidgets.QMainWindow):
         # 초기화
         self.setup_ui()
         self.setup_connections()
-        
-        # 서버와 유저 윈도우 생성
-        self.main_window = MainWindow(self)
-        self.user_window = UserWindow(self)
 
     def setup_ui(self):
         """UI 초기 설정"""
@@ -89,6 +84,8 @@ class LoginWindow(QtWidgets.QMainWindow):
                 if success_message.exec_() == QtWidgets.QMessageBox.Ok:
                     self.hide()
                     if role.lower() == 'admin':
+                        # 서버와 유저 윈도우 생성
+                        self.main_window = MainWindow(self)
                         self.main_window.show()
                     else:
                         self.user_window = UserWindow(self)

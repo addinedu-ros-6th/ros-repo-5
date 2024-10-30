@@ -10,6 +10,7 @@ import socket
 # 서버 소켓을 관리하는 스레드 클래스
 class ServerThread(QThread):
     message_received = pyqtSignal(str)  # 메시지 수신 신호
+    checkboxsync = pyqtSignal(str)  # 메시지 수신 신호
 
     def __init__(self):
         super().__init__()
@@ -17,7 +18,7 @@ class ServerThread(QThread):
 
     def run(self):
         HOST = '127.0.0.1'  # 로컬호스트
-        PORT = 65427        # 포트번호
+        PORT = 65420        # 포트번호
 
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((HOST, PORT))
@@ -29,6 +30,7 @@ class ServerThread(QThread):
             try:
                 self.client_socket, addr = server_socket.accept()  # 클라이언트 연결 수락
                 print(f"클라이언트가 연결되었습니다: {addr}")
+                self.checkboxsync.emit("Client Connected")
 
                 while True:
                     data = self.client_socket.recv(1024)  # 클라이언트로부터 데이터 수신
@@ -65,7 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.server_thread = ServerThread()
         self.server_thread.message_received.connect(self.on_message_received)
         self.server_thread.start()
-
+        self.server_thread.checkboxsync.connect(self.clientcheckboxsync)
         # stack widget 버튼 이동
         self.main_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
         self.call_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
@@ -86,6 +88,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.checkbox_basket_4.clicked.connect(self.checkbox_basket_4_changed)
         self.checkbox_basket_5.clicked.connect(self.checkbox_basket_5_changed)
         self.checkbox_basket_6.clicked.connect(self.checkbox_basket_6_changed)
+
+    def clientcheckboxsync(self):
+        for i in range(len(self.checkbox_list)):
+            checkbox_status = self.checkbox_list[i].isChecked()
+            if checkbox_status == True:
+                checkbox_status = "1"
+            else:
+                checkbox_status = "0"
+            string_i = str(i+1)
+            # 각 체크박스 상태를 개별 메시지로 보냄
+            self.send_message(f"cb,{string_i},{checkbox_status}\n")  # 여전히 루프 내부에 위치
+
 
     def on_message_received(self, message):
         # 수신된 메시지를 처리하는 함수
@@ -114,55 +128,55 @@ class MainWindow(QtWidgets.QMainWindow):
         print("basket_1 clicked")
         if self.checkbox_basket_1.isChecked() == True :
             print("basket_1_checked")
-            self.send_message("cb,1,1")
+            self.send_message("cb,1,1\r\n")
         else:
             print("basket_1_unchecked")
-            self.send_message("cb,1,0")
+            self.send_message("cb,1,0\r\n")
 
     def checkbox_basket_2_changed(self):
         print("basket_2 clicked")
         if self.checkbox_basket_2.isChecked() == True :
             print("basket_2_checked")
-            self.send_message("cb,2,1")
+            self.send_message("cb,2,1\r\n")
         else:
             print("basket_2_unchecked")
-            self.send_message("cb,2,0")
+            self.send_message("cb,2,0\r\n")
 
     def checkbox_basket_3_changed(self):
         print("basket_3 clicked")
         if self.checkbox_basket_3.isChecked() == True :
             print("basket_3_checked")
-            self.send_message("cb,3,1")
+            self.send_message("cb,3,1\r\n")
         else:
             print("basket_3_unchecked")
-            self.send_message("cb,3,0")
+            self.send_message("cb,3,0\r\n")
 
     def checkbox_basket_4_changed(self):
         print("basket_4 clicked")
         if self.checkbox_basket_4.isChecked() == True :
             print("basket_4_checked")
-            self.send_message("cb,4,1")
+            self.send_message("cb,4,1\r\n")
         else:
             print("basket_4_unchecked")
-            self.send_message("cb,4,0")
+            self.send_message("cb,4,0\r\n")
 
     def checkbox_basket_5_changed(self):
         print("basket_5 clicked")
         if self.checkbox_basket_5.isChecked() == True :
             print("basket_5_checked")
-            self.send_message("cb,5,1")
+            self.send_message("cb,5,1\r\n")
         else:
             print("basket_5_unchecked")
-            self.send_message("cb,5,0")
+            self.send_message("cb,5,0\r\n")
 
     def checkbox_basket_6_changed(self):
         print("basket_6 clicked")
         if self.checkbox_basket_6.isChecked() == True :
             print("basket_6_checked")
-            self.send_message("cb,6,1")
+            self.send_message("cb,6,1\r\n")
         else:
             print("basket_6_unchecked")
-            self.send_message("cb,6,0")
+            self.send_message("cb,6,0\r\n")
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
