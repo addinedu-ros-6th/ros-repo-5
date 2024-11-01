@@ -12,6 +12,7 @@ class ClientThread(QThread):
 
     def __init__(self, host, port):
         super().__init__()
+
         self.client_socket = None
 
     def run(self):
@@ -56,7 +57,9 @@ class UserWindow(QtWidgets.QMainWindow):
         self.logout_button.clicked.connect(self.logout)
 
         # 클라이언트 스레드 초기화
+
         self.client_thread = ClientThread(server_ip, server_port)
+
         self.client_thread.message_received.connect(self.on_message_received)
         self.client_thread.start()
 
