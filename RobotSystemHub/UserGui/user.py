@@ -3,29 +3,30 @@ import sys
 import socket
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
+server_ip = "192.168.0.37" #Server IP 기입
+server_port = 65423
+
 class ClientThread(QThread):
-    message_received = pyqtSignal(str)  # 메시지 수신 신호
+    message_received = pyqtSignal(str)
 
     def __init__(self, host, port):
         super().__init__()
-        self.host = host
-        self.port = 65420
         self.client_socket = None
 
     def run(self):
         try:
             # 서버에 연결
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.client_socket.connect((self.host, self.port))
+            self.client_socket.connect((server_ip, server_port))
             print("서버에 연결되었습니다.")
 
             while True:
-                data = self.client_socket.recv(1024)  # 서버로부터 데이터 수신
+                data = self.client_socket.recv(1024)
                 if not data:
                     print("서버와의 연결이 종료되었습니다.")
                     break
                 message = data.decode()
-                self.message_received.emit(message)  # 수신된 메시지를 메인 윈도우로 전송
+                self.message_received.emit(message)
 
         except Exception as e:
             print(f"오류 발생: {e}")
@@ -35,8 +36,8 @@ class ClientThread(QThread):
                 self.client_socket.close()
 
     def send_message(self, message):
-        if self.client_socket:  # 서버가 연결되어 있는지 확인
-            self.client_socket.sendall(message.encode())  # 서버에게 메시지 전송
+        if self.client_socket:  
+            self.client_socket.sendall(message.encode())  
 
 
 class UserWindow(QtWidgets.QMainWindow):
@@ -53,31 +54,29 @@ class UserWindow(QtWidgets.QMainWindow):
         self.logout_button.clicked.connect(self.logout)
 
         # 클라이언트 스레드 초기화
-        self.client_thread = ClientThread('127.0.0.1', 65432)  # 서버 주소와 포트
+        self.client_thread = ClientThread(server_ip, server_port)
         self.client_thread.message_received.connect(self.on_message_received)
         self.client_thread.start()
 
         self.checkbox_basket_1.clicked.connect(self.checkbox_basket_1_changed)
-        self.checkbox_basket_2.stateChanged.connect(self.checkbox_basket_2_changed)
-        self.checkbox_basket_3.stateChanged.connect(self.checkbox_basket_3_changed)
-        self.checkbox_basket_4.stateChanged.connect(self.checkbox_basket_4_changed)
-        self.checkbox_basket_5.stateChanged.connect(self.checkbox_basket_5_changed)
-        self.checkbox_basket_6.stateChanged.connect(self.checkbox_basket_6_changed)
+        self.checkbox_basket_2.clicked.connect(self.checkbox_basket_2_changed)
+        self.checkbox_basket_3.clicked.connect(self.checkbox_basket_3_changed)
+        self.checkbox_basket_4.clicked.connect(self.checkbox_basket_4_changed)
+        self.checkbox_basket_5.clicked.connect(self.checkbox_basket_5_changed)
+        self.checkbox_basket_6.clicked.connect(self.checkbox_basket_6_changed)
 
     def send_message(self, message):
         # 메세지 전송
-        self.client_thread.send_message(message)  # 클라이언트 스레드에 메시지 전송
+        self.client_thread.send_message(message)
 
     def on_message_received(self, message):
-        # 수신된 메시지를 처리하는 함수
-                # 수신된 메시지를 처리하는 함수
-        messages = message.splitlines()  # 각 줄로 분리
+        messages = message.splitlines()
         
         for msg in messages:
-            split_message = msg.split(",")  # 개별 메시지를 ','로 나눔
+            split_message = msg.split(",")
             print(split_message)
             
-            if split_message[0] == "cb":
+            if split_message[0] == "cb": #message[0] : cb(Checkbox) message[1] : cb 번호, message[2] : True/False
                 n = int(split_message[1])
                 if split_message[2] == "1":
                     self.checkbox_list[n-1].setChecked(True)

@@ -7,52 +7,95 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QPixmap
 import socket
 
+class ClientThread(QThread):
+    message_received = pyqtSignal(str) 
+    checkboxsync = pyqtSignal(str)
+    disconnected = pyqtSignal()
+    
+    def __init__(self, client_socket):
+        super().__init__()
+        self.client_socket = client_socket
+        self.is_connected = True  # 연결 상태 변수 추가
+        
+    def run(self):
+        try:
+            self.checkboxsync.emit("sync")
+            while True:
+                data = self.client_socket.recv(1024)
+                if not data:
+                    print("클라이언트가 연결을 종료했습니다.")
+                    self.is_connected = False  # 연결 해제 시 상태 업데이트
+                    self.disconnected.emit()  # 연결 해제 신호 발송
+                    break
+                message = data.decode()
+                print(f"클라이언트로부터 받은 메시지: {message}")
+
+                self.message_received.emit(message)
+
+        except Exception as e:
+            print(f"오류 발생: {e}")
+            self.disconnected.emit()  # 오류 발생 시에도 연결 해제 신호 발송
+        finally:
+            self.client_socket.close()
+        
 # 서버 소켓을 관리하는 스레드 클래스
 class ServerThread(QThread):
-    message_received = pyqtSignal(str)  # 메시지 수신 신호
-    checkboxsync = pyqtSignal(str)  # 메시지 수신 신호
+    message_received = pyqtSignal(str)
+    checkboxsync = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
-        self.client_socket = None  # 클라이언트 소켓 저장
+        self.client_threads = []  # 클라이언트 스레드 목록
 
     def run(self):
-        HOST = '127.0.0.1'  # 로컬호스트
-        PORT = 65420        # 포트번호
+        HOST = '0.0.0.0'  # 로컬호스트 (모든 ip 허용 시 0,0,0,0)
+        PORT = 65423      # 포트번호
 
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((HOST, PORT))
-        server_socket.listen()
+        server_socket.listen(5)
 
         print("서버가 시작되었습니다. 클라이언트를 기다리는 중...")
 
         while True:
             try:
-                self.client_socket, addr = server_socket.accept()  # 클라이언트 연결 수락
+                client_socket, addr = server_socket.accept()
                 print(f"클라이언트가 연결되었습니다: {addr}")
-                self.checkboxsync.emit("Client Connected")
 
-                while True:
-                    data = self.client_socket.recv(1024)  # 클라이언트로부터 데이터 수신
-                    if not data:
-                        print("클라이언트가 연결을 종료했습니다.")
-                        break
-                    message = data.decode()
-                    print(f"클라이언트로부터 받은 메시지: {message}")
+                client_thread = ClientThread(client_socket)
+                client_thread.message_received.connect(self.on_message_received)
+                client_thread.checkboxsync.connect(self.on_checkboxsync)
+                client_thread.disconnected.connect(self.on_client_disconnected)
+                client_thread.start()
 
-                    # 메시지를 메인 윈도우로 전송
-                    self.message_received.emit(message)
+                self.client_threads.append(client_thread)  # 클라이언트 스레드를 목록에 추가
 
             except Exception as e:
                 print(f"오류 발생: {e}")
 
-            finally:
-                if self.client_socket:
-                    self.client_socket.close()
+    def on_message_received(self, message):
+        self.message_received.emit(message)
 
+    def on_checkboxsync(self):
+        self.checkboxsync.emit("sync")
+
+    def on_client_disconnected(self):
+        # 연결 해제된 클라이언트 스레드를 목록에서 제거
+        for thread in self.client_threads:
+            if not thread.is_connected:
+                self.client_threads.remove(thread)
+                print("클라이언트 스레드가 목록에서 제거되었습니다.")
+                break
+            
     def send_message(self, message):
-        if self.client_socket:  # 클라이언트가 연결되어 있는지 확인
-            self.client_socket.sendall(message.encode())  # 클라이언트에게 메시지 전송
+        for thread in self.client_threads:
+            if thread.client_socket:  # 클라이언트 소켓이 유효한지 확인
+                try:
+                    thread.client_socket.sendall(message.encode())
+                    print(message)
+                except Exception as e:
+                    print(f"메시지 전송 오류: {e}")
+                    self.client_threads.remove(thread)  # 오류가 발생하면 스레드 목록에서 제거
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, login_window):
@@ -68,6 +111,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.server_thread.message_received.connect(self.on_message_received)
         self.server_thread.start()
         self.server_thread.checkboxsync.connect(self.clientcheckboxsync)
+
         # stack widget 버튼 이동
         self.main_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
         self.call_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
@@ -80,8 +124,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # 가상 맵 설정
         pixmap = QPixmap('robot_system_server/EnterpriseManager/ServerGui/virtual_map.png')
+
         self.virtual_map.setPixmap(pixmap)
         self.virtual_map.setScaledContents(True)
+
         self.checkbox_basket_1.clicked.connect(self.checkbox_basket_1_changed)
         self.checkbox_basket_2.clicked.connect(self.checkbox_basket_2_changed)
         self.checkbox_basket_3.clicked.connect(self.checkbox_basket_3_changed)
@@ -97,8 +143,7 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 checkbox_status = "0"
             string_i = str(i+1)
-            # 각 체크박스 상태를 개별 메시지로 보냄
-            self.send_message(f"cb,{string_i},{checkbox_status}\n")  # 여전히 루프 내부에 위치
+            self.send_message(f"cb,{string_i},{checkbox_status}\n") #새로운 Client 접속 시 checkbox 상태 전송
 
 
     def on_message_received(self, message):
@@ -111,12 +156,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.checkbox_list[n-1].setChecked(True)
             elif split_message[2] == "0":
                 self.checkbox_list[n-1].setChecked(False)
-
-        
+            self.send_message(f"cb,{n},{split_message[2]}\n") #Client에서 수신된 데이터 모든 client에 전송
 
     def send_message(self, message):
-        # 메시지 전송
-        self.server_thread.send_message(message)  # 서버 스레드에 메시지 전송
+        self.server_thread.send_message(message)
 
     def logout(self):
         self.hide()
@@ -180,7 +223,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    login_window = QtWidgets.QMainWindow()  # 로그인 윈도우 초기화 (예시로 빈 윈도우 생성)
+    login_window = QtWidgets.QMainWindow()
     main_window = MainWindow(login_window)
     main_window.show()
     sys.exit(app.exec_())
