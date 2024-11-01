@@ -4,7 +4,7 @@ import socket
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 import mysql.connector
 
-server_ip = "192.168.0.37" #Server IP 기입
+server_ip = "192.168.0.7" #Server IP 기입
 server_port = 65423
 
 class ClientThread(QThread):
@@ -50,9 +50,6 @@ class UserWindow(QtWidgets.QMainWindow):
         uic.loadUi('RobotSystemHub/UserGui/user.ui', self)
         self.employee_number = self.login_window.text_id.text() 
         
-        self.checkbox_list = [self.checkbox_basket_1, self.checkbox_basket_2, self.checkbox_basket_3,
-                              self.checkbox_basket_4, self.checkbox_basket_5, self.checkbox_basket_6]
-        
         # 로그아웃 버튼 연결
         self.logout_button.clicked.connect(self.logout)
 
@@ -64,11 +61,6 @@ class UserWindow(QtWidgets.QMainWindow):
         self.client_thread.start()
 
         self.checkbox_basket_1.clicked.connect(self.checkbox_basket_1_changed)
-        self.checkbox_basket_2.clicked.connect(self.checkbox_basket_2_changed)
-        self.checkbox_basket_3.clicked.connect(self.checkbox_basket_3_changed)
-        self.checkbox_basket_4.clicked.connect(self.checkbox_basket_4_changed)
-        self.checkbox_basket_5.clicked.connect(self.checkbox_basket_5_changed)
-        self.checkbox_basket_6.clicked.connect(self.checkbox_basket_6_changed)
 
         # db연동 
         self.db_config = {
@@ -104,10 +96,6 @@ class UserWindow(QtWidgets.QMainWindow):
             user_result = cursor.fetchone()
             
             if user_result:
-                # 모든 체크박스를 먼저 disable
-                for checkbox in self.checkbox_list:
-                    checkbox.setEnabled(False)
-
                 # 사용자의 할당된 basket 조회
                 basket_query = """
                     SELECT np.name, np.id
@@ -117,15 +105,8 @@ class UserWindow(QtWidgets.QMainWindow):
                 """
                 cursor.execute(basket_query, (user_result['id'],))
                 assigned_baskets = cursor.fetchall()
-        
-                # 할당된 basket만 enable
-                for basket in assigned_baskets:
-                    try:
-                        basket_num = int(''.join(filter(str.isdigit, basket['name'])))
-                        if 1 <= basket_num <= len(self.checkbox_list):
-                            self.checkbox_list[basket_num-1].setEnabled(True)
-                    except ValueError:
-                        continue
+                self.basket_id = assigned_baskets[0]['id']
+                self.basket_name = assigned_baskets[0]['name']
 
             cursor.close()
 
@@ -146,11 +127,11 @@ class UserWindow(QtWidgets.QMainWindow):
             print(split_message)
             
             if split_message[0] == "cb": #message[0] : cb(Checkbox) message[1] : cb 번호, message[2] : True/False
-                n = int(split_message[1])
-                if split_message[2] == "1":
-                    self.checkbox_list[n-1].setChecked(True)
-                elif split_message[2] == "0":
-                    self.checkbox_list[n-1].setChecked(False)
+                if split_message[1] == str(self.basket_id):
+                    if split_message[2] == "1":
+                        self.checkbox_basket_1.setChecked(True)
+                    elif split_message[2] == "0":
+                        self.checkbox_basket_1.setChecked(False)
 
     def logout(self):
         self.hide()
@@ -160,60 +141,13 @@ class UserWindow(QtWidgets.QMainWindow):
         self.db_connection.close()
         
     def checkbox_basket_1_changed(self):
-        print("basket_1 clicked")
+        print(f"{self.basket_name} clicked")
         if self.checkbox_basket_1.isChecked() == True :
-            print("basket_1_checked")
-            self.send_message("cb,1,1")
+            print(f"{self.basket_name}_checked")
+            self.send_message(f"cb,{self.basket_id},1")
         else:
             print("basket_1_unchecked")
-            self.send_message("cb,1,0")
-
-    def checkbox_basket_2_changed(self):
-        print("basket_2 clicked")
-        if self.checkbox_basket_2.isChecked() == True :
-            print("basket_2_checked")
-            self.send_message("cb,2,1")
-        else:
-            print("basket_2_unchecked")
-            self.send_message("cb,2,0")
-
-    def checkbox_basket_3_changed(self):
-        print("basket_3 clicked")
-        if self.checkbox_basket_3.isChecked() == True :
-            print("basket_3_checked")
-            self.send_message("cb,3,1")
-        else:
-            print("basket_3_unchecked")
-            self.send_message("cb,3,0")
-
-    def checkbox_basket_4_changed(self):
-        print("basket_4 clicked")
-        if self.checkbox_basket_4.isChecked() == True :
-            print("basket_4_checked")
-            self.send_message("cb,4,1")
-        else:
-            print("basket_4_unchecked")
-            self.send_message("cb,4,0")
-
-    def checkbox_basket_5_changed(self):
-        print("basket_5 clicked")
-        if self.checkbox_basket_5.isChecked() == True :
-            print("basket_5_checked")
-            self.send_message("cb,5,1")
-        else:
-            print("basket_5_unchecked")
-            self.send_message("cb,5,0")
-
-    def checkbox_basket_6_changed(self):
-        print("basket_6 clicked")
-        if self.checkbox_basket_6.isChecked() == True :
-            print("basket_6_checked")
-            self.send_message("cb,6,1")
-        else:
-            print("basket_6_unchecked")
-            self.send_message("cb,6,0")
-
-
+            self.send_message(f"cb,{self.basket_id},0")
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
