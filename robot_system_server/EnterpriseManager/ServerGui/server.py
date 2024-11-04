@@ -2,10 +2,38 @@ from PyQt5 import QtWidgets, uic
 import sys
 import os
 import resource_rc
-from PyQt5.QtWidgets import QHeaderView
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem,QDialog, QVBoxLayout, QLabel,QMessageBox
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer ,QDate
+from PyQt5.QtGui import QPixmap,QImage
 import socket
+import mysql.connector
+import cv2
+import os
+\
+
+class ImageWindow(QDialog):
+    def __init__(self, image, parent=None):
+        super(ImageWindow, self).__init__(parent)
+        self.setWindowTitle("Image Viewer")
+
+        # 이미지 QLabel 생성
+        label = QLabel(self)
+        height, width, channel = image.shape
+        bytes_per_line = 3 * width
+        q_image = QPixmap(QPixmap.fromImage(QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888).rgbSwapped()))
+
+        # QLabel에 이미지 설정
+        label.setPixmap(q_image)
+
+        # 레이아웃 설정
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        self.setLayout(layout)
+        self.resize(width, height)
+
+    def show_image(self):
+        self.exec_()
+
 
 class ClientThread(QThread):
     message_received = pyqtSignal(str) 
@@ -100,11 +128,28 @@ class ServerThread(QThread):
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, login_window):
         super().__init__()
+        self.setWindowTitle("Server")
         self.login_window = login_window
         uic.loadUi('robot_system_server/EnterpriseManager/ServerGui/server.ui', self)
-
+         
         self.checkbox_list = [self.checkbox_basket_1, self.checkbox_basket_2, self.checkbox_basket_3,
                               self.checkbox_basket_4, self.checkbox_basket_5, self.checkbox_basket_6]
+        
+        """로그테이블의 combobox셋업"""
+        self.options = {
+            "all" : ["all"],
+            "job_status": ["all","pending","allocated","completed","cancled","inprogress","aruco_error"],
+            "robot_status": ["all","idle","driving","waiting","charging"],
+            "employee_number": ["all","1234","test"]
+        }
+        
+        self.search_type.addItems(self.options.keys())
+        self.search_type.currentTextChanged.connect(self.update_item)
+        self.update_item(self.search_type.currentText())
+        self.search_button.clicked.connect(self.load_log_data)
+        current_date = QDate.currentDate()
+        self.end_date.setDate(current_date)
+
 
         # 서버 스레드 생성 및 시작
         self.server_thread = ServerThread()
@@ -112,12 +157,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.server_thread.start()
         self.server_thread.checkboxsync.connect(self.clientcheckboxsync)
 
+        self.log_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
         # stack widget 버튼 이동
         self.main_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
         self.call_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
         self.log_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(2))
 
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.map_job_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         # 로그아웃 버튼
         self.logout_button.clicked.connect(self.logout)
@@ -134,6 +181,119 @@ class MainWindow(QtWidgets.QMainWindow):
         self.checkbox_basket_4.clicked.connect(self.checkbox_basket_4_changed)
         self.checkbox_basket_5.clicked.connect(self.checkbox_basket_5_changed)
         self.checkbox_basket_6.clicked.connect(self.checkbox_basket_6_changed)
+    
+    def update_item(self, text):
+        """첫 번째 콤보박스 선택에 따라 두 번째 콤보박스 항목 업데이트"""
+        self.search_item.clear()
+        self.search_item.addItems(self.options[text])
+    
+    def load_log_data(self):
+        try:
+            connection = mysql.connector.connect(
+                host='database-1.cpog6osggiv3.ap-northeast-2.rds.amazonaws.com',
+                user='arduino_PJT ',
+                password='1234',
+                database='ardumension'
+            )
+            cursor = connection.cursor()
+            start_date = self.start_date.date().toString("yyyy-MM-dd")
+            end_date = self.end_date.date().toString("yyyy-MM-dd")
+
+
+
+            # 기본 쿼리
+            base_query = base_query = """
+                SELECT * FROM (
+                    SELECT 
+                        j.create_at AS time,
+                        j.job_id,
+                        j.job_status,
+                        r.name AS robot_name,
+                        r.current_status as robot_status,
+                        e.image_path,
+                        u.employee_number AS user_name,
+                        n.name AS navigation_point,
+                        e.aruco_id
+                    FROM JobLog AS j
+                    LEFT JOIN Robot AS r ON j.robot_id = r.id
+                    LEFT JOIN JobErrorLog AS e ON j.job_id = e.job_id
+                    LEFT JOIN RobotUser AS u ON j.user_id = u.id
+                    LEFT JOIN NavigationPoint AS n ON j.navigation_point_id = n.id
+                    WHERE DATE(j.create_at) BETWEEN %s AND %s
+
+                    UNION ALL
+
+                    SELECT 
+                        rs.create_at AS time,
+                        rs.job_id,
+                        j.job_status,
+                        r.name AS robot_name,
+                        rs.robot_status,
+                        e.image_path,
+                        u.employee_number AS user_name,
+                        n.name AS navigation_point,
+                        e.aruco_id
+                    FROM RobotStatusLog AS rs
+                    LEFT JOIN JobLog AS j ON rs.job_id = j.job_id
+                    LEFT JOIN Robot AS r ON rs.robot_id = r.id
+                    LEFT JOIN JobErrorLog AS e ON rs.job_id = e.job_id
+                    LEFT JOIN RobotUser AS u ON j.user_id = u.id
+                    LEFT JOIN NavigationPoint AS n ON j.navigation_point_id = n.id
+                    WHERE DATE(rs.create_at) BETWEEN %s AND %s
+                ) AS combined_logs
+            """
+
+            search_type = self.search_type.currentText()
+            search_item = self.search_item.currentText()
+            params = [start_date, end_date, start_date, end_date]
+            #검색 조건
+            
+            if search_type != "all" and search_item != "all":
+                if search_type == "job_status":
+                    base_query += " WHERE job_status = %s"
+                elif search_type == "robot_status":
+                    base_query += " WHERE robot_status = %s"
+                elif search_type == "employee_number":
+                    base_query += " WHERE user_name = %s"
+                params.append(search_item)
+
+            base_query += " ORDER BY time ASC"
+            print("Executing query:", base_query) 
+            print("Parameters:", params)  
+            
+            cursor.execute(base_query, params)
+            logs = cursor.fetchall()
+            
+            # 테이블 데이터 설정
+            self.log_table.setRowCount(len(logs))
+            for row, log in enumerate(logs):
+                for col, value in enumerate(log):
+                    text = '' if value is None else str(value)
+                    item = QTableWidgetItem(text)
+                    item.setTextAlignment(Qt.AlignCenter)
+                    self.log_table.setItem(row, col, item)
+            
+            cursor.close()
+            connection.close()
+            
+        except mysql.connector.Error as err:
+            print(f"데이터베이스 오류: {err}")
+            QMessageBox.warning(self, "오류", f"데이터베이스 오류: {err}")
+   
+    def table1_dclicked(self, row, col):
+        image_path = self.log_table.item(row, 5).text()
+        if image_path:
+            self.open_new_window(image_path)
+        print(image_path)
+
+    def open_new_window(self, image_path):
+        try:
+            image = cv2.imread(image_path)
+            image_window = ImageWindow(image)
+            image_window.show_image()
+        except AttributeError:
+            QMessageBox.warning(self, "오류", "사진이 존재하지 않습니다.")
+        
 
     def clientcheckboxsync(self):
         for i in range(len(self.checkbox_list)):
