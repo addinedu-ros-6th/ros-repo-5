@@ -191,7 +191,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.call_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
         self.log_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(2))
 
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.map_job_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         # 로그아웃 버튼
         self.logout_button.clicked.connect(self.logout)
