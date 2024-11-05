@@ -30,10 +30,8 @@ class ImageSubscriberCompressed(Node):
         np_arr = np.frombuffer(msg.data, np.uint8)
         frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         
-        undistorted_frame = cv2.undistort(frame, mtx, dist, None, mtx)
-        
         # ArUco 마커를 탐지하고 주석을 추가
-        annotated_frame, detected_markers = self.aruco_detector.detect_and_annotate(undistorted_frame)
+        annotated_frame, detected_markers = self.aruco_detector.detect_and_annotate(frame)
 
         # 감지된 마커 ID, 2D 좌표, 3D 위치 좌표 출력
         for marker in detected_markers:
