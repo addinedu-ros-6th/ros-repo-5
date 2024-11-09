@@ -253,7 +253,7 @@ QPushButton{
      <string notr="true">background-color: rgb(240, 245, 254);</string>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="Map">
      <widget class="QLabel" name="map">
@@ -280,6 +280,9 @@ QPushButton{
         <width>471</width>
         <height>151</height>
        </rect>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
       </property>
       <column>
        <property name="text">
@@ -543,7 +546,7 @@ QPushButton{
      <zorder>checkbox_basket_1</zorder>
     </widget>
     <widget class="QWidget" name="Log">
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>10</x>

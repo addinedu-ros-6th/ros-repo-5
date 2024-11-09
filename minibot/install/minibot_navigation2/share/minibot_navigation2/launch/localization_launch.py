@@ -1,0 +1,1 @@
+/home/jh/dev_ws/ros_study/minibot/src/pinklab_minibot_robot/minibot_navigation2/launch/localization_launch.py

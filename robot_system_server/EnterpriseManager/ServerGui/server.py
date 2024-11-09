@@ -169,9 +169,12 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.login_window = login_window
         uic.loadUi('robot_system_server/EnterpriseManager/ServerGui/server.ui', self)
-
+        self.map_job_log()
         # taskmanager 클래스 인스턴스 생성
         self.tm = taskmanager.taskmanager(self.login_window)
+        self.refresh_timer = QTimer()
+        self.refresh_timer.timeout.connect(self.map_job_log)
+        self.refresh_timer.start(5000)
 
         self.checkbox_list = [self.checkbox_basket_1, self.checkbox_basket_2, self.checkbox_basket_3,
                               self.checkbox_basket_4, self.checkbox_basket_5, self.checkbox_basket_6]
@@ -224,6 +227,39 @@ class MainWindow(QtWidgets.QMainWindow):
         self.log_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.map_job_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
+    def map_job_log(self):
+        try:
+            conn = mysql.connector.connect(
+                host='database-1.cpog6osggiv3.ap-northeast-2.rds.amazonaws.com',
+                user='arduino_PJT ',
+                password='1234',
+                database='ardumension'
+            )
+            cursor = conn.cursor()
+            query = """
+            SELECT u.employee_number, j.id, j.job_status 
+            FROM JobLog jl 
+            JOIN RobotUser u ON jl.user_id = u.id 
+            JOIN Job j ON j.id = jl.job_id 
+            WHERE j.job_status NOT IN ('cancel', 'complete') 
+            GROUP BY u.employee_number, j.id, j.job_status
+            """
+            cursor.execute(query)
+            results = cursor.fetchall()
+            self.map_job_widget.setRowCount(len(results))
+            for row, data in enumerate(results):
+                for col, value in enumerate(data):
+                    item = QTableWidgetItem(str(value))
+                    # 테이블 위젯에 아이템 설정
+                    self.map_job_widget.setItem(row, col, item)
+                    
+        except mysql.connector.Error as err:
+            print(f"데이터베이스 오류: {err}")
+        
+    def refresh_data(self):
+        """테이블 데이터 새로고침"""
+        self.clearContents()
+        self.map_job_log()
     def update_item(self, text):
         """첫 번째 콤보박스 선택에 따라 두 번째 콤보박스 항목 업데이트"""
         self.search_item.clear()
@@ -293,9 +329,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     base_query += " WHERE user_name = %s"
                 params.append(search_item)
             base_query += " ORDER BY time ASC"
-            print("Executing query:", base_query) 
-            print("Parameters:", params)  
-            
             cursor.execute(base_query, params)
             logs = cursor.fetchall()
             

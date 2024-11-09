@@ -1,0 +1,1 @@
+/home/jh/dev_ws/ros_study/minibot/build/minibot_gazebo/ament_cmake_core/minibot_gazeboConfig-version.cmake
