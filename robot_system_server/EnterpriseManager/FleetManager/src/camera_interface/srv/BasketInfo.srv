@@ -6,4 +6,4 @@ bool basket_exist
 
 #response
 
-bool aruco_done
+bool rec_response 
