@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'fleet_manager_node = fleet_manager.fleet_manager_node:main'
+            'fleet_manager_node = fleet_manager.fleet_manager_node:main',
+            'minibot_pos_calibrator = fleet_manager.minibot_pos_calibrate:main'
         ],
     },
 )
