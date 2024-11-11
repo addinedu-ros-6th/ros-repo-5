@@ -15,7 +15,6 @@ find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ArucoInfo.srv"
-  "srv/BasketInfo.srv"
   DEPENDENCIES geometry_msgs  # geometry_msgs 의존성 추가
   "msg/YoloDetect.msg"
 )
