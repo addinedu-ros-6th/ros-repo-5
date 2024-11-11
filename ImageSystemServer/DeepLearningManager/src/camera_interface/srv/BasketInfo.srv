@@ -1,0 +1,9 @@
+#request
+
+bool basket_info_req
+
+---
+
+#response
+
+bool basket_exist
