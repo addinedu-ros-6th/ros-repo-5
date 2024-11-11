@@ -1,9 +1,9 @@
 #request
 
-bool basket_info_req
+bool basket_exist
 
 ---
 
 #response
 
-bool basket_exist
+bool aruco_done
