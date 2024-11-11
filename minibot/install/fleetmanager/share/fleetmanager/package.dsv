@@ -1,0 +1,6 @@
+source;share/fleetmanager/hook/pythonpath.ps1
+source;share/fleetmanager/hook/pythonpath.dsv
+source;share/fleetmanager/hook/pythonpath.sh
+source;share/fleetmanager/hook/ament_prefix_path.ps1
+source;share/fleetmanager/hook/ament_prefix_path.dsv
+source;share/fleetmanager/hook/ament_prefix_path.sh

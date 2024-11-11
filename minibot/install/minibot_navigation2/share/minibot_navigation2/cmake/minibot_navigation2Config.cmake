@@ -1,0 +1,1 @@
+/home/jh/dev_ws/ros_study/minibot/build/minibot_navigation2/ament_cmake_core/minibot_navigation2Config.cmake
