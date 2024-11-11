@@ -11,7 +11,6 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='jeback',
@@ -22,8 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'dl_manager_node = deeplearning_manager.dl_manager_node:main',
-            'picam_stream_processor = deeplearning_manager.cam_subscriber_and_process:main',
-            'picam_yolo_processor = deeplearning_manager.cam_subscriber_and_yolo:main', 
+            'picam_stream_processor = deeplearning_manager.cam_subscriber_and_process:main' 
         ],
     },
 )
