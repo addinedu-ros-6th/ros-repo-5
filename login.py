@@ -35,10 +35,10 @@ class LoginWindow(QtWidgets.QMainWindow):
     def get_db_connection(self):
         """데이터베이스 연결"""
         return mysql.connector.connect(
-            host="database-1.cpog6osggiv3.ap-northeast-2.rds.amazonaws.com",
-            user="arduino_PJT",
-            password="1234",
-            database="ardumension"
+            host="localhost",
+            user="root",
+            password="123123",
+            database="trashbot"
         )
     
     def verify_password(self, stored_hash, stored_salt, provided_password):

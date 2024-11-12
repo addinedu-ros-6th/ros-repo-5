@@ -1,12 +1,15 @@
 #request 
 
 bool aruco_info_req
+
 ---
 
 #response
 
-int32[] ids
+int64 aruco_id 
 
-geometry_msgs/Point[] positions
+float64 pos_x 
+float64 pos_y
+float64 pos_z 
 
-float32[] distance
+float64 distance

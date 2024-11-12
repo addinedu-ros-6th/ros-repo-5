@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import CompressedImage
-from camera_interface.msg import YoloDetect
+from dlm_interface.msg import YoloDetect
 import numpy as np
 import cv2
 from ultralytics import YOLO

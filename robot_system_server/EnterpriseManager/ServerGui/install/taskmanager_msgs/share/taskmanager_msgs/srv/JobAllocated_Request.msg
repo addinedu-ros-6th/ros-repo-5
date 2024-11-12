@@ -1,0 +1,6 @@
+int64 robot_num
+float64 x
+float64 y
+float64 z
+float64 w
+int64 job_id

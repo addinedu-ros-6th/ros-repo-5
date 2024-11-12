@@ -1,0 +1,10 @@
+msg/RobotStatus.idl
+msg/RobotStatus.msg
+srv/JobAllocated.idl
+srv/JobAllocated.srv
+srv/JobAllocated_Request.msg
+srv/JobAllocated_Response.msg
+srv/JobCompleteReq.idl
+srv/JobCompleteReq.srv
+srv/JobCompleteReq_Request.msg
+srv/JobCompleteReq_Response.msg

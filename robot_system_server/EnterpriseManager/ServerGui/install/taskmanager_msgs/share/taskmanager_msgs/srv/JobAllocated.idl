@@ -1,0 +1,25 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from taskmanager_msgs/srv/JobAllocated.srv
+// generated code does not contain a copyright notice
+
+
+module taskmanager_msgs {
+  module srv {
+    struct JobAllocated_Request {
+      int64 robot_num;
+
+      double x;
+
+      double y;
+
+      double z;
+
+      double w;
+
+      int64 job_id;
+    };
+    struct JobAllocated_Response {
+      int64 receive_complete;
+    };
+  };
+};

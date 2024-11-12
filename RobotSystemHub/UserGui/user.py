@@ -4,8 +4,8 @@ import socket
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 import mysql.connector
 
-server_ip = "192.168.0.7" #Server IP 기입
-server_port = 65423
+server_ip = "192.168.0.17" #Server IP 기입
+server_port = 65413
 
 class ClientThread(QThread):
     message_received = pyqtSignal(str)
@@ -64,10 +64,10 @@ class UserWindow(QtWidgets.QMainWindow):
 
         # db연동 
         self.db_config = {
-            'host': "database-1.cpog6osggiv3.ap-northeast-2.rds.amazonaws.com",
-            'user': "arduino_PJT",
-            'password': "1234",
-            'database': "ardumension"
+            'host': "localhost",
+            'user': "root",
+            'password': "123123",
+            'database': "trashbot"
         }
         self.db_connection = None
         self.connect_to_database()
@@ -93,9 +93,9 @@ class UserWindow(QtWidgets.QMainWindow):
                 WHERE employee_number = %s
             """
             cursor.execute(user_query, (self.employee_number,))
-            user_result = cursor.fetchone()
+            self.user_result = cursor.fetchone()
             
-            if user_result:
+            if self.user_result:
                 # 사용자의 할당된 basket 조회
                 basket_query = """
                     SELECT np.name, np.id
@@ -103,7 +103,7 @@ class UserWindow(QtWidgets.QMainWindow):
                     JOIN NavigationPoint np ON ub.navigation_point_id = np.id
                     WHERE ub.user_id = %s
                 """
-                cursor.execute(basket_query, (user_result['id'],))
+                cursor.execute(basket_query, (self.user_result['id'],))
                 assigned_baskets = cursor.fetchall()
                 self.basket_id = assigned_baskets[0]['id']
                 self.basket_name = assigned_baskets[0]['name']
@@ -144,10 +144,10 @@ class UserWindow(QtWidgets.QMainWindow):
         print(f"{self.basket_name} clicked")
         if self.checkbox_basket_1.isChecked() == True :
             print(f"{self.basket_name}_checked")
-            self.send_message(f"cb,{self.basket_id},1")
+            self.send_message(f"cb,{self.basket_id},1,{self.user_result['id']}")
         else:
             print("basket_1_unchecked")
-            self.send_message(f"cb,{self.basket_id},0")
+            self.send_message(f"cb,{self.basket_id},0,{self.user_result['id']}")
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

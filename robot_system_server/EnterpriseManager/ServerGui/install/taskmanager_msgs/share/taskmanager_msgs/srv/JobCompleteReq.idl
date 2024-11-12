@@ -1,0 +1,19 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from taskmanager_msgs/srv/JobCompleteReq.srv
+// generated code does not contain a copyright notice
+
+
+module taskmanager_msgs {
+  module srv {
+    struct JobCompleteReq_Request {
+      int64 job_id;
+
+      int64 job_complete;
+
+      int64 detected_sensor;
+    };
+    struct JobCompleteReq_Response {
+      int64 receive_complete;
+    };
+  };
+};

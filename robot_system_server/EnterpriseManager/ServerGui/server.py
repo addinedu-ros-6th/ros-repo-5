@@ -11,7 +11,7 @@ import os
 from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem,QDialog, QVBoxLayout, QLabel,QMessageBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer ,QDate
 from PyQt5.QtGui import QPixmap,QImage
-import rclpy
+import rclpy as rp
 from rclpy.node import Node
 from geometry_msgs.msg import Pose  # X, Y, TH 데이터를 담을 수 있는 메시지
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -21,6 +21,9 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 import robot_system_server.EnterpriseManager.ServerGui.taskmanager as taskmanager
+from taskmanager_msgs.srv import JobCompleteReq, JobAllocated
+from taskmanager_msgs.msg import RobotStatus
+
 
 class ImageWindow(QDialog):
     def __init__(self, image, parent=None):
@@ -45,33 +48,71 @@ class ImageWindow(QDialog):
 class RosSubscriberNode(Node):
     def __init__(self):
         super().__init__('pose_subscriber')
-        self.subscription = self.create_subscription(Pose, '/trashbot/Pose', self.listener_callback, 10)
-        self.pose_x = 0.0
-        self.pose_y = 0.0
-        self.pose_th = 0.0
+        self.subscription = self.create_subscription(RobotStatus, 'RobotStatus', self.robot0_status, 10)
+        self.server = self.create_service(JobCompleteReq, 'JobCompleteReq', self.jobcompletereq)
+        self.client = self.create_client(JobAllocated, 'JobAllocatedRes')
 
-    def listener_callback(self, msg):
-        self.pose_x = msg.position.x
-        self.pose_y = msg.position.y
-        self.pose_th = msg.orientation.z
-        self.get_logger().info(f'Received - X: {self.pose_x}, Y: {self.pose_y}, TH: {self.pose_th}')
+        self.req_complete_job_id = None
+
+    def robot0_status(self, msg): # receive data
+        self.status = msg.robot_status
+        self.pose_x = msg.x
+        self.pose_y = msg.y
+        self.battery = msg.battery_status
+
+        #robot0 status print
+        # self.get_logger().info(f'robot_status : {self.status}, Received - X: {self.pose_x}, Y: {self.pose_y}, battery : {self.battery}')
+
+    def jobcompletereq(self, request, response):
+        self.req_complete_job_id = request.job_id
+        self.job_complete_status = request.job_complete # 0 : basket 없음, 1 : Job 완료
+        self.detected_sensor = request.detected_sensor
+        print(f"recv req_complete_job_id : {self.req_complete_job_id}, job_complete_status : {self.job_complete_status} detected sensor : {self.detected_sensor}")
+        
+        response.receive_complete = 1
+        return response
+
+    def send_job_inprogress_and_cancel(self, robot_num, x, y, z, w, job_id, nav_id):
+        request = JobAllocated.Request()
+        request.robot_num = robot_num
+        request.x = x
+        request.y = y
+        request.z = z
+        request.w = w
+        request.job_id = job_id
+        request.nav_id = nav_id
+        
+        # 비동기 호출
+        future = self.client.call_async(request)
+        future.add_done_callback(self.response_check)
+
+        self.get_logger().info(f'Sent JobAllocated request for robot {robot_num} to ({x}, {y}, {z}, {w}) with job ID {job_id}, nav id : {nav_id}')
+
+    def response_check(self, future):
+        response = future.result()
+        self.get_logger().info(f"Response received: {response}")
 
 class RosThread(QThread):
-    pose_received = pyqtSignal(float, float, float)
-
+    robot0_status_received = pyqtSignal(str, float, float, int)
+    jobcompletereq_received = pyqtSignal(int, int, int)
+    
     def __init__(self):
         super().__init__()
-        rclpy.init()
+        rp.init()
         self.node = RosSubscriberNode()
 
     def run(self):
-        while rclpy.ok():
-            rclpy.spin_once(self.node)
+        while rp.ok():
+            rp.spin_once(self.node)
+            if self.node.req_complete_job_id is not None:
+                self.jobcompletereq_received.emit(self.node.req_complete_job_id, self.node.job_complete_status, self.node.detected_sensor)
+                self.node.req_complete_job_id = None
+
             # 받은 데이터를 PyQt로 전달
-            self.pose_received.emit(self.node.pose_x, self.node.pose_y, self.node.pose_th)
+            self.robot0_status_received.emit(self.node.status, self.node.pose_x, self.node.pose_y, self.node.battery)
 
     def stop(self):
-        rclpy.shutdown()
+        rp.shutdown()
         self.node.destroy_node()
 
 class ClientThread(QThread):
@@ -159,7 +200,7 @@ class ServerThread(QThread):
             if thread.client_socket:  # 클라이언트 소켓이 유효한지 확인
                 try:
                     thread.client_socket.sendall(message.encode())
-                    print(message)
+                    print(f"send to client msg : {message}")
                 except Exception as e:
                     print(f"메시지 전송 오류: {e}")
                     self.client_threads.remove(thread)  # 오류가 발생하면 스레드 목록에서 제거
@@ -169,18 +210,18 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.login_window = login_window
         uic.loadUi('robot_system_server/EnterpriseManager/ServerGui/server.ui', self)
-        self.map_job_log()
+
         # taskmanager 클래스 인스턴스 생성
         self.tm = taskmanager.taskmanager(self.login_window)
-        self.refresh_timer = QTimer()
-        self.refresh_timer.timeout.connect(self.map_job_log)
-        self.refresh_timer.start(5000)
-
+        self.robot_status_list = [{"status" : "idle", "current_x" : 0, "current_y" : 0, "battery" : 50},  #minibot1
+                                  {"status" : "idle", "current_x" : 0, "current_y" : 0, "battery" : 50}]  #minibot2
         self.checkbox_list = [self.checkbox_basket_1, self.checkbox_basket_2, self.checkbox_basket_3,
                               self.checkbox_basket_4, self.checkbox_basket_5, self.checkbox_basket_6]
+        
         # ROS 스레드 시작
         self.ros_thread = RosThread()
-        self.ros_thread.pose_received.connect(self.update_pose)
+        self.ros_thread.robot0_status_received.connect(self.robot0_status)
+        self.ros_thread.jobcompletereq_received.connect(self.job_complete)
         self.ros_thread.start()
         
         # 서버 스레드 생성 및 시작
@@ -197,7 +238,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.map_job_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         # 로그아웃 버튼
-        self.logout_button.clicked.connect(self.logout)
+        # self.logout_button.clicked.connect(self.logout)
+        self.logout_button.clicked.connect(self.test_status)
 
         # 가상 맵 설정
         pixmap = QPixmap('robot_system_server/EnterpriseManager/ServerGui/virtual_map.png')
@@ -205,11 +247,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.virtual_map.setPixmap(pixmap)
         self.virtual_map.setScaledContents(True)
 
+        #map 데이터 불러오기
+        self.map_pose_list = self.tm.map_data()
         
-        
-
         for i in range(len(self.checkbox_list)):
             self.checkbox_list[i].clicked.connect(lambda checked, index=i: self.checkbox_basket_changed(checked, index))
+
         """로그테이블의 combobox셋업"""
         self.options = {
             "all" : ["all"],
@@ -222,44 +265,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.search_type.currentTextChanged.connect(self.update_item)
         self.update_item(self.search_type.currentText())
         self.search_button.clicked.connect(self.load_log_data)
-        current_date = QDate.currentDate()
+        current_date = QDate.currentDate() 
         self.end_date.setDate(current_date)
         self.log_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.map_job_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-    def map_job_log(self):
-        try:
-            conn = mysql.connector.connect(
-                host='database-1.cpog6osggiv3.ap-northeast-2.rds.amazonaws.com',
-                user='arduino_PJT ',
-                password='1234',
-                database='ardumension'
-            )
-            cursor = conn.cursor()
-            query = """
-            SELECT u.employee_number, j.id, j.job_status 
-            FROM JobLog jl 
-            JOIN RobotUser u ON jl.user_id = u.id 
-            JOIN Job j ON j.id = jl.job_id 
-            WHERE j.job_status NOT IN ('cancel', 'complete') 
-            GROUP BY u.employee_number, j.id, j.job_status
-            """
-            cursor.execute(query)
-            results = cursor.fetchall()
-            self.map_job_widget.setRowCount(len(results))
-            for row, data in enumerate(results):
-                for col, value in enumerate(data):
-                    item = QTableWidgetItem(str(value))
-                    # 테이블 위젯에 아이템 설정
-                    self.map_job_widget.setItem(row, col, item)
-                    
-        except mysql.connector.Error as err:
-            print(f"데이터베이스 오류: {err}")
-        
-    def refresh_data(self):
-        """테이블 데이터 새로고침"""
-        self.clearContents()
-        self.map_job_log()
     def update_item(self, text):
         """첫 번째 콤보박스 선택에 따라 두 번째 콤보박스 항목 업데이트"""
         self.search_item.clear()
@@ -268,10 +278,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def load_log_data(self):
         try:
             connection = mysql.connector.connect(
-                host='database-1.cpog6osggiv3.ap-northeast-2.rds.amazonaws.com',
-                user='arduino_PJT ',
-                password='1234',
-                database='ardumension'
+                host="localhost",
+                user="root",
+                password="123123",
+                database="trashbot"
             )
             cursor = connection.cursor()
             start_date = self.start_date.date().toString("yyyy-MM-dd")
@@ -329,6 +339,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     base_query += " WHERE user_name = %s"
                 params.append(search_item)
             base_query += " ORDER BY time ASC"
+            print("Executing query:", base_query) 
+            print("Parameters:", params)  
+            
             cursor.execute(base_query, params)
             logs = cursor.fetchall()
             
@@ -353,6 +366,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if image_path:
             self.open_new_window(image_path)
         print(image_path)
+
     def open_new_window(self, image_path):
         try:
             image = cv2.imread(image_path)
@@ -361,9 +375,67 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError:
             QMessageBox.warning(self, "오류", "사진이 존재하지 않습니다.")
 
-    def update_pose(self, x, y, th):
+    def robot0_status(self, status, x, y, battery):
         # ROS에서 받은 데이터를 UI로 업데이트
-        print(f"Received Pose - X: {x}, Y: {y}, TH: {th}")
+        self.robot_status_list[0] = {"status" : status, "current_x" : x, "current_y" : y, "battery" : 50}
+        # print(self.robot_status_list) #robot status
+
+    def test_status(self):
+        self.robot_status_list = [{"status" : "idle", "current_x" : 0, "current_y" : 0, "battery" : 50},  #minibot1
+                                  {"status" : "driving", "current_x" : 0, "current_y" : 0, "battery" : 50}]  #minibot2
+        for i in range(len(self.robot_status_list)):
+            if ((self.robot_status_list[i]['status'] == 'idle' or self.robot_status_list[i]['status'] == 'charging')  and self.robot_status_list[i]['battery'] > 40):
+                robot_id = i
+
+                #Job 유무 확인
+                nav_id = self.tm.check_job_allocated(robot_id)#job 유무 확인 및 dump job 확인
+                if nav_id != None:
+                    job_id, nav_id = self.tm.job_inprogress(robot_id,nav_id)
+                    
+                    x = float(self.map_pose_list[nav_id-1][2])
+                    y = float(self.map_pose_list[nav_id-1][3])
+                    z = float(self.map_pose_list[nav_id-1][4])
+                    w = float(self.map_pose_list[nav_id-1][5])
+
+                    print(f"inprogress request,{robot_id}, {x}, {y}, {z}, {w}, {job_id}")
+                    self.send_request_job_inprogress(robot_id, x, y, z, w, job_id)
+            elif self.robot_status_list[i]['status'] == 'driving':
+                if self.robot_status_list[i]['battery'] > 40:
+                    pass
+                else:
+                    self.tm.job_refresh()
+                    self.tm.job_allocate(self.robot_status_list, self.map_pose_list)
+                    print("Rescheduling complete!!")
+                    
+    def job_complete(self, job_id, complete_status, detected_sensor):
+        if complete_status == 0: #basket 없으면 error
+            job_status = "error"
+        elif complete_status == 1: # basket 있으면 complete
+            job_status = "complete"
+
+        nav_id, user_id, robot_id = self.tm.update_job_complete_and_error(job_id, job_status)
+        print(f"Job {job_status}, Job_ID : {job_id}, robot_id : {robot_id}, nav_id : {nav_id}, user_id : {user_id}")
+
+        print(f"test : {nav_id}")
+        # self.checkbox_list[nav_id-1].setChecked(False)
+        bt_status = "0" #False
+
+        self.send_message(f"cb,{nav_id},{bt_status},{user_id}\n") #Client에서 수신된 데이터 모든 client에 전송
+
+        if detected_sensor == 1:
+            if robot_id == 0:
+                nav_id = 8 # 0번 로봇 쓰레기 장소 id
+            elif robot_id == 1:
+                nav_id = 9 # 1번 로봇 쓰레기 장소 id
+
+            job_id = self.tm.job_create(1, robot_id, nav_id) #관리자 모드 Job 생성
+            job_status = "allocated"
+            self.tm.job_allocate_dump(1, robot_id, nav_id, job_id, job_status)
+
+    def send_request_job_inprogress(self, robot_id, x, y, z, w, job_id):
+        # ROS 노드의 send_request 호출
+        print(f"send_request_job_inprogress,{robot_id}, {x}, {y}, {z}, {w}, {job_id}")
+        self.ros_thread.node.send_job_inprogress_and_cancel(robot_id, x, y, z, w, job_id)
 
     def closeEvent(self, event):
         # 프로그램 종료 시 ROS 노드를 종료
@@ -380,24 +452,34 @@ class MainWindow(QtWidgets.QMainWindow):
             string_i = str(i+1)
             self.send_message(f"cb,{string_i},{checkbox_status}\n") #새로운 Client 접속 시 checkbox 상태 전송
 
-
     def on_message_received(self, message):
         # 수신된 메시지를 처리하는 함수
         split_message = message.split(",")
-        print(split_message)
+        print(f"received client msg : {split_message}")
         if split_message[0] == "cb" : # client에서 받은 데이터로 checkbox 상태 변경
             index = int(split_message[1])
             self.userid = int(split_message[3]) #client user id
             if split_message[2] == "1": #Checkbox True
                 self.checkbox_list[index-1].setChecked(True)
-                self.tm.job_create(self.userid ,navigation_point_id = index) # 유저 모드 Job 생성
+                robot_id = None
+                job_id = self.tm.job_create(self.userid, robot_id, navigation_point_id = index) # 유저 모드 Job 생성
+                if job_id != None:
+                    self.tm.job_allocate(self.robot_status_list, self.map_pose_list) # Job 할당 및 Job table 업데이트, JobLog 추가
+                else:
+                    print("Job Create Fail")
 
             elif split_message[2] == "0": #Checkbox False
                 self.checkbox_list[index-1].setChecked(False)
-                job_id, job_status = self.tm.Job_jobstatus_check(navigation_point_id = index) #Job ID, Job staus 불러오기
+                job_id, job_status, robot_id = self.tm.Job_jobstatus_check(navigation_point_id = index) #Job ID, Job staus 불러오기
 
+                if job_status == 'inprogress':
+                    print(f"job status is {job_status}, user = client, cancel msg : {robot_id}, 0.0, 0.0, 0.0, 0.0, {job_id}")
+                    self.ros_thread.node.send_job_inprogress_and_cancel(robot_id, 0.0, 0.0, 0.0, 0.0, job_id)
+                    self.tm.Job_cancel(job_id, navigation_point_id = index, user_id = self.userid) #유저 모드 Job 취소
+                    
                 if job_status == 'pending' or job_status == 'allocated':
-                    self.tm.Job_update_notinprogress_to_cancel(job_id, navigation_point_id = index, user_id = self.userid) #유저 모드 Job 취소
+                    print(f"job status is {job_status}, user = client, Job Cancel")
+                    self.tm.Job_cancel(job_id, navigation_point_id = index, user_id = self.userid) #유저 모드 Job 취소
 
             self.send_message(f"cb,{index},{split_message[2]},{self.userid}\n") #Client에서 수신된 데이터 모든 client에 전송
 
@@ -413,20 +495,31 @@ class MainWindow(QtWidgets.QMainWindow):
 # self,user_id, job_id, navigation_point_id, pos_x, pos_y, proximity_status):
     def checkbox_basket_changed(self, checked, index):
         server_id = 1
-        print(f"basket_{index} clicked")
+        print(f"basket_{index+1} clicked")
         if checked:
             if self.checkbox_list[index].isChecked() == True :
+                robot_id = None
                 print(f"basket_{index+1}_checked")
                 self.send_message(f"cb,{index+1},1\r\n")
-                self.tm.job_create(server_id, navigation_point_id = index+1) #관리자 모드 Job 생성
+                job_id = self.tm.job_create(server_id, robot_id, navigation_point_id = index+1) #관리자 모드 Job 생성
+                if job_id != None:
+                    self.tm.job_allocate(self.robot_status_list, self.map_pose_list) # Job 할당 및 Job table 업데이트, JobLog 추가
+                else:
+                    print("Job Create Fail")
         elif checked==False:
             if self.checkbox_list[index].isChecked() == False :
                 print(f"basket_{index+1}_unchecked")
                 self.send_message(f"cb,{index+1},0\r\n")
-                job_id, job_status = self.tm.Job_jobstatus_check(navigation_point_id = index+1) #Job ID, Job staus 불러오기
+                job_id, job_status, robot_id = self.tm.Job_jobstatus_check(navigation_point_id = index+1) #Job ID, Job staus 불러오
+                
+                if job_status == 'inprogress':
+                    print(f"cancel job id {job_id}, user = server, cancel msg : {robot_id}, 0.0, 0.0, 0.0, 0.0, {job_id}")
+                    self.ros_thread.node.send_job_inprogress_and_cancel(robot_id, 0.0, 0.0, 0.0, 0.0, job_id)
+                    self.tm.Job_cancel(job_id, navigation_point_id = index+1, user_id = server_id) #관리자보드  모드 Job 취소
 
                 if job_status == 'pending' or job_status == 'allocated':
-                    self.tm.Job_update_notinprogress_to_cancel(job_id, navigation_point_id = index+1, user_id = server_id) #관리자보드  모드 Job 취소
+                    print(f"cancel job id : {job_id}, user = server, Job Cancel")
+                    self.tm.Job_cancel(job_id, navigation_point_id = index+1, user_id = server_id) #관리자보드  모드 Job 취소
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
