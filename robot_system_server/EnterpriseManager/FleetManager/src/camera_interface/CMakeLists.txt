@@ -14,6 +14,7 @@ find_package(geometry_msgs REQUIRED)  # geometry_msgs 의존성 추가
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ArucoInfo.srv"
   "srv/BasketInfo.srv"
+  "srv/PosCalibration.srv"
   DEPENDENCIES geometry_msgs  # geometry_msgs 의존성 추가
 )
 
