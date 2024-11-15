@@ -18,6 +18,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 import mysql.connector
 import cv2
 import os
+from PIL import Image 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 import robot_system_server.EnterpriseManager.ServerGui.taskmanager as taskmanager
@@ -247,6 +248,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.virtual_map.setPixmap(pixmap)
         self.virtual_map.setScaledContents(True)
 
+        #navi_map 이미지 띄우기
+        self.map.setScaledContents(True)
+        
+        navi_map = QPixmap('robot_system_server/EnterpriseManager/ServerGui/navi_map.png')
+        resized_navi_map = navi_map.scaled(self.map.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.map.setPixmap(resized_navi_map)
+
+        
         #map 데이터 불러오기
         self.map_pose_list = self.tm.map_data()
         
