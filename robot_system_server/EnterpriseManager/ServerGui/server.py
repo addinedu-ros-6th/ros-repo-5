@@ -3,8 +3,8 @@ import sys
 import os
 import resource_rc
 from PyQt5.QtWidgets import QHeaderView
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt, QThread, pyqtSignal,QPointF
+from PyQt5.QtGui import QPixmap, QPainter
 import socket
 import sys
 import os
@@ -18,6 +18,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 import mysql.connector
 import cv2
 import os
+from PIL import Image 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 import robot_system_server.EnterpriseManager.ServerGui.taskmanager as taskmanager
@@ -259,6 +260,45 @@ class MainWindow(QtWidgets.QMainWindow):
         self.virtual_map.setPixmap(pixmap)
         self.virtual_map.setScaledContents(True)        
 
+        #navi_map 이미지 띄우기
+        self.map.setScaledContents(True)
+        
+        navi_map = QPixmap('robot_system_server/EnterpriseManager/ServerGui/image/navi_map.png')
+        self.resized_navi_map = navi_map.scaled(self.map.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+        #robot icon 추가 
+        self.robot1_icon = QPixmap("robot_system_server/EnterpriseManager/ServerGui/image/robot1.png").scaled(40, 40, Qt.KeepAspectRatio)  # 로봇 1 이미지 크기 조정
+        self.robot2_icon = QPixmap("robot_system_server/EnterpriseManager/ServerGui/image/robot2.png").scaled(40, 40, Qt.KeepAspectRatio)  # 로봇 2 이미지 크기 조정
+
+        self.robot1_position = QPointF(810, 150)
+        self.robot2_position = QPointF(850, 150)
+
+        #section 번호 추가 
+        self.number_images = {
+            str(i): QPixmap(f"robot_system_server/EnterpriseManager/ServerGui/image/{i}.png").scaled(30, 30, Qt.KeepAspectRatio)
+            for i in range(1,7)
+        }
+
+        self.number_positions = {
+            (1050,530):   "1",  
+            (900, 370):    "2",  
+            (840, 370):    "3",  
+            (560, 210):    "4",  
+            (350, 480):    "5",  
+            (600, 750):    "6",  
+        }
+        
+        self.draw_numbers_on_map()
+
+        self.map.setPixmap(self.resized_navi_map)
+
+        self.map_timer = QTimer()
+        self.map_timer.timeout.connect(self.update_positions)
+        self.map_timer.start(100)
+
+        self.robot1_direction = QPointF(0, 0)
+        self.robot2_direction = QPointF(0, 0)
+
         #map 데이터 불러오기
         self.map_pose_list = self.tm.map_data()
         
@@ -281,6 +321,52 @@ class MainWindow(QtWidgets.QMainWindow):
         self.end_date.setDate(current_date)
         self.log_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.map_job_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+    
+    def draw_numbers_on_map(self):
+        """맵 이미지 위에 숫자 이미지를 고정 위치에 그리기"""
+        painter = QPainter(self.resized_navi_map)
+
+        # 숫자 이미지를 지정된 위치에 그리기
+        for position, number in self.number_positions.items():
+            if number in self.number_images:
+                painter.drawPixmap(position[0], position[1], self.number_images[number])
+
+        painter.end()
+
+    def update_positions(self):
+        """로봇 위치 갱신 및 화면 갱신"""
+        # 현재 위치 업데이트
+        self.robot1_position += self.robot1_direction
+        self.robot2_position += self.robot2_direction
+
+        # 경계 조건 처리 (맵 크기에 맞게 반전)
+        map_width = self.resized_navi_map.width()
+        map_height = self.resized_navi_map.height()
+
+        if not (0 <= self.robot1_position.x() <= map_width and 0 <= self.robot1_position.y() <= map_height):
+            self.robot1_direction *= -1
+        if not (0 <= self.robot2_position.x() <= map_width and 0 <= self.robot2_position.y() <= map_height):
+            self.robot2_direction *= -1
+
+        # 화면 갱신
+        self.repaint()
+
+    def paintEvent(self, event):
+        """QLabel 위에 로봇 이미지 그리기"""
+        painter = QPainter(self.map.pixmap())  # QLabel에 그리기
+        # 로봇 1 그리기
+        painter.drawPixmap(
+            int(self.robot1_position.x()), 
+            int(self.robot1_position.y()), 
+            self.robot1_icon
+        )
+        # 로봇 2 그리기
+        painter.drawPixmap(
+            int(self.robot2_position.x()), 
+            int(self.robot2_position.y()), 
+            self.robot2_icon
+        )
+        painter.end()
 
     def update_item(self, text):
         """첫 번째 콤보박스 선택에 따라 두 번째 콤보박스 항목 업데이트"""
