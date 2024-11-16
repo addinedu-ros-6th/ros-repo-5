@@ -26,6 +26,7 @@ typedef struct taskmanager_msgs__srv__JobAllocated_Request
   double z;
   double w;
   int64_t job_id;
+  int64_t nav_id;
 } taskmanager_msgs__srv__JobAllocated_Request;
 
 // Struct for a sequence of taskmanager_msgs__srv__JobAllocated_Request.

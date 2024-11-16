@@ -17,6 +17,8 @@ module taskmanager_msgs {
       double w;
 
       int64 job_id;
+
+      int64 nav_id;
     };
     struct JobAllocated_Response {
       int64 receive_complete;

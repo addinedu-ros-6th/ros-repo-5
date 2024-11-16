@@ -31,7 +31,7 @@ void taskmanager_msgs__srv__JobAllocated_Request__rosidl_typesupport_introspecti
   taskmanager_msgs__srv__JobAllocated_Request__fini(message_memory);
 }
 
-static rosidl_typesupport_introspection_c__MessageMember taskmanager_msgs__srv__JobAllocated_Request__rosidl_typesupport_introspection_c__JobAllocated_Request_message_member_array[6] = {
+static rosidl_typesupport_introspection_c__MessageMember taskmanager_msgs__srv__JobAllocated_Request__rosidl_typesupport_introspection_c__JobAllocated_Request_message_member_array[7] = {
   {
     "robot_num",  // name
     rosidl_typesupport_introspection_c__ROS_TYPE_INT64,  // type
@@ -133,13 +133,30 @@ static rosidl_typesupport_introspection_c__MessageMember taskmanager_msgs__srv__
     NULL,  // fetch(index, &value) function pointer
     NULL,  // assign(index, value) function pointer
     NULL  // resize(index) function pointer
+  },
+  {
+    "nav_id",  // name
+    rosidl_typesupport_introspection_c__ROS_TYPE_INT64,  // type
+    0,  // upper bound of string
+    NULL,  // members of sub message
+    false,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(taskmanager_msgs__srv__JobAllocated_Request, nav_id),  // bytes offset in struct
+    NULL,  // default value
+    NULL,  // size() function pointer
+    NULL,  // get_const(index) function pointer
+    NULL,  // get(index) function pointer
+    NULL,  // fetch(index, &value) function pointer
+    NULL,  // assign(index, value) function pointer
+    NULL  // resize(index) function pointer
   }
 };
 
 static const rosidl_typesupport_introspection_c__MessageMembers taskmanager_msgs__srv__JobAllocated_Request__rosidl_typesupport_introspection_c__JobAllocated_Request_message_members = {
   "taskmanager_msgs__srv",  // message namespace
   "JobAllocated_Request",  // message name
-  6,  // number of fields
+  7,  // number of fields
   sizeof(taskmanager_msgs__srv__JobAllocated_Request),
   taskmanager_msgs__srv__JobAllocated_Request__rosidl_typesupport_introspection_c__JobAllocated_Request_message_member_array,  // message members
   taskmanager_msgs__srv__JobAllocated_Request__rosidl_typesupport_introspection_c__JobAllocated_Request_init_function,  // function to initialize message memory (memory has to be allocated)

@@ -44,6 +44,7 @@ struct JobAllocated_Request_
       this->z = 0.0;
       this->w = 0.0;
       this->job_id = 0ll;
+      this->nav_id = 0ll;
     }
   }
 
@@ -59,6 +60,7 @@ struct JobAllocated_Request_
       this->z = 0.0;
       this->w = 0.0;
       this->job_id = 0ll;
+      this->nav_id = 0ll;
     }
   }
 
@@ -81,6 +83,9 @@ struct JobAllocated_Request_
   using _job_id_type =
     int64_t;
   _job_id_type job_id;
+  using _nav_id_type =
+    int64_t;
+  _nav_id_type nav_id;
 
   // setters for named parameter idiom
   Type & set__robot_num(
@@ -117,6 +122,12 @@ struct JobAllocated_Request_
     const int64_t & _arg)
   {
     this->job_id = _arg;
+    return *this;
+  }
+  Type & set__nav_id(
+    const int64_t & _arg)
+  {
+    this->nav_id = _arg;
     return *this;
   }
 
@@ -178,6 +189,9 @@ struct JobAllocated_Request_
       return false;
     }
     if (this->job_id != other.job_id) {
+      return false;
+    }
+    if (this->nav_id != other.nav_id) {
       return false;
     }
     return true;

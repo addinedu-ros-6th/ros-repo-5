@@ -253,7 +253,7 @@ QPushButton{
      <string notr="true">background-color: rgb(240, 245, 254);</string>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="Map">
      <widget class="QLabel" name="map">
@@ -534,6 +534,45 @@ QPushButton{
        <string>map</string>
       </property>
      </widget>
+     <widget class="QCheckBox" name="checkbox_dump_1">
+      <property name="geometry">
+       <rect>
+        <x>780</x>
+        <y>340</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>dump1</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkbox_dump_2">
+      <property name="geometry">
+       <rect>
+        <x>890</x>
+        <y>340</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>dump2</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkbox_init_pos">
+      <property name="geometry">
+       <rect>
+        <x>670</x>
+        <y>340</y>
+        <width>92</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>init_pos</string>
+      </property>
+     </widget>
      <zorder>virtual_map</zorder>
      <zorder>checkbox_basket_5</zorder>
      <zorder>checkbox_basket_4</zorder>
@@ -541,9 +580,12 @@ QPushButton{
      <zorder>checkbox_basket_6</zorder>
      <zorder>checkbox_basket_3</zorder>
      <zorder>checkbox_basket_1</zorder>
+     <zorder>checkbox_dump_1</zorder>
+     <zorder>checkbox_dump_2</zorder>
+     <zorder>checkbox_init_pos</zorder>
     </widget>
     <widget class="QWidget" name="Log">
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>10</x>

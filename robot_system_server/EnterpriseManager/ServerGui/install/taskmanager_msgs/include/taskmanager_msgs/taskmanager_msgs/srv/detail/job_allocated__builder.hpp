@@ -21,16 +21,32 @@ namespace srv
 namespace builder
 {
 
+class Init_JobAllocated_Request_nav_id
+{
+public:
+  explicit Init_JobAllocated_Request_nav_id(::taskmanager_msgs::srv::JobAllocated_Request & msg)
+  : msg_(msg)
+  {}
+  ::taskmanager_msgs::srv::JobAllocated_Request nav_id(::taskmanager_msgs::srv::JobAllocated_Request::_nav_id_type arg)
+  {
+    msg_.nav_id = std::move(arg);
+    return std::move(msg_);
+  }
+
+private:
+  ::taskmanager_msgs::srv::JobAllocated_Request msg_;
+};
+
 class Init_JobAllocated_Request_job_id
 {
 public:
   explicit Init_JobAllocated_Request_job_id(::taskmanager_msgs::srv::JobAllocated_Request & msg)
   : msg_(msg)
   {}
-  ::taskmanager_msgs::srv::JobAllocated_Request job_id(::taskmanager_msgs::srv::JobAllocated_Request::_job_id_type arg)
+  Init_JobAllocated_Request_nav_id job_id(::taskmanager_msgs::srv::JobAllocated_Request::_job_id_type arg)
   {
     msg_.job_id = std::move(arg);
-    return std::move(msg_);
+    return Init_JobAllocated_Request_nav_id(msg_);
   }
 
 private:

@@ -37,7 +37,7 @@ void JobAllocated_Request_fini_function(void * message_memory)
   typed_message->~JobAllocated_Request();
 }
 
-static const ::rosidl_typesupport_introspection_cpp::MessageMember JobAllocated_Request_message_member_array[6] = {
+static const ::rosidl_typesupport_introspection_cpp::MessageMember JobAllocated_Request_message_member_array[7] = {
   {
     "robot_num",  // name
     ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64,  // type
@@ -139,13 +139,30 @@ static const ::rosidl_typesupport_introspection_cpp::MessageMember JobAllocated_
     nullptr,  // fetch(index, &value) function pointer
     nullptr,  // assign(index, value) function pointer
     nullptr  // resize(index) function pointer
+  },
+  {
+    "nav_id",  // name
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64,  // type
+    0,  // upper bound of string
+    nullptr,  // members of sub message
+    false,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(taskmanager_msgs::srv::JobAllocated_Request, nav_id),  // bytes offset in struct
+    nullptr,  // default value
+    nullptr,  // size() function pointer
+    nullptr,  // get_const(index) function pointer
+    nullptr,  // get(index) function pointer
+    nullptr,  // fetch(index, &value) function pointer
+    nullptr,  // assign(index, value) function pointer
+    nullptr  // resize(index) function pointer
   }
 };
 
 static const ::rosidl_typesupport_introspection_cpp::MessageMembers JobAllocated_Request_message_members = {
   "taskmanager_msgs::srv",  // message namespace
   "JobAllocated_Request",  // message name
-  6,  // number of fields
+  7,  // number of fields
   sizeof(taskmanager_msgs::srv::JobAllocated_Request),
   JobAllocated_Request_message_member_array,  // message members
   JobAllocated_Request_init_function,  // function to initialize message memory (memory has to be allocated)

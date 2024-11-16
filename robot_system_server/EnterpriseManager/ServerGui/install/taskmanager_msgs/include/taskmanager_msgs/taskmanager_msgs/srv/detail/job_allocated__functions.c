@@ -22,6 +22,7 @@ taskmanager_msgs__srv__JobAllocated_Request__init(taskmanager_msgs__srv__JobAllo
   // z
   // w
   // job_id
+  // nav_id
   return true;
 }
 
@@ -37,6 +38,7 @@ taskmanager_msgs__srv__JobAllocated_Request__fini(taskmanager_msgs__srv__JobAllo
   // z
   // w
   // job_id
+  // nav_id
 }
 
 bool
@@ -69,6 +71,10 @@ taskmanager_msgs__srv__JobAllocated_Request__are_equal(const taskmanager_msgs__s
   if (lhs->job_id != rhs->job_id) {
     return false;
   }
+  // nav_id
+  if (lhs->nav_id != rhs->nav_id) {
+    return false;
+  }
   return true;
 }
 
@@ -92,6 +98,8 @@ taskmanager_msgs__srv__JobAllocated_Request__copy(
   output->w = input->w;
   // job_id
   output->job_id = input->job_id;
+  // nav_id
+  output->nav_id = input->nav_id;
   return true;
 }
 

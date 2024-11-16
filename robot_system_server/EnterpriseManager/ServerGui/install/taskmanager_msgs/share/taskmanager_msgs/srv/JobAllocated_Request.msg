@@ -4,3 +4,4 @@ float64 y
 float64 z
 float64 w
 int64 job_id
+int64 nav_id
