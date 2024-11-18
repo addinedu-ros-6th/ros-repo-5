@@ -1,0 +1,2 @@
+int64 push_button
+int64 detected_sensor

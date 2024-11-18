@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(camera_interface)
+project(minibot_interfaces)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,16 +7,15 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-find_package(geometry_msgs REQUIRED)  # geometry_msgs 의존성 추가
+# uncomment the following section in order to fill in
+# further dependencies manually.
+# find_package(<dependency> REQUIRED)
 
-# 서비스 인터페이스 생성
+find_package(rosidl_default_generators REQUIRED)
+
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/ArucoInfo.srv"
-  "srv/BasketInfo.srv"
-  "srv/PosCalibration.srv"
-  "msg/YoloDetect.msg"
-  DEPENDENCIES geometry_msgs  # geometry_msgs 의존성 추가
+  "msg/DeviceData.msg"
+  "srv/Pickup.srv"
 )
 
 if(BUILD_TESTING)

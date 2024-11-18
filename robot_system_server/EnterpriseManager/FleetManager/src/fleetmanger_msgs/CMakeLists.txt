@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(camera_interface)
+project(fleetmanger_msgs)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,17 +7,28 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-find_package(geometry_msgs REQUIRED)  # geometry_msgs 의존성 추가
+# uncomment the following section in order to fill in
+# further dependencies manually.
+# find_package(<dependency> REQUIRED)
 
-# 서비스 인터페이스 생성
+add_executable(fleetmanager_msgs src/fleetmanager_msgs.cpp)
+target_include_directories(fleetmanager_msgs PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(fleetmanager_msgs PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
+find_package(rosidl_default_generators REQUIRED)
+
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/ArucoInfo.srv"
-  "srv/BasketInfo.srv"
-  "srv/PosCalibration.srv"
-  "msg/YoloDetect.msg"
-  DEPENDENCIES geometry_msgs  # geometry_msgs 의존성 추가
+  "msg/DeviceData.msg"
+  "msg/Posetest.msg"
+  "srv/SensorData.srv"
+  "action/Actiontest.action"
+  "srv/DrivingStatus.srv"
 )
+
+install(TARGETS fleetmanager_msgs
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
