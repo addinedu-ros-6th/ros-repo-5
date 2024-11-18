@@ -2,23 +2,22 @@ from PyQt5 import QtWidgets, uic
 import sys
 import os
 import resource_rc
-from PyQt5.QtWidgets import QHeaderView
+# from PyQt5.QtWidgets import QHeaderView
 from PyQt5.QtCore import Qt, QThread, pyqtSignal,QPointF
 from PyQt5.QtGui import QPixmap, QPainter
 import socket
-import sys
-import os
 from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem,QDialog, QVBoxLayout, QLabel,QMessageBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer ,QDate
 from PyQt5.QtGui import QPixmap,QImage
 import rclpy as rp
 from rclpy.node import Node
 from geometry_msgs.msg import Pose  # X, Y, TH 데이터를 담을 수 있는 메시지
-from PyQt5.QtCore import QThread, pyqtSignal
+# from PyQt5.QtCore import QThread, pyqtSignal
 import mysql.connector
 import cv2
-import os
+import schedule
 from PIL import Image 
+import threading
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 import robot_system_server.EnterpriseManager.ServerGui.taskmanager as taskmanager
@@ -159,7 +158,7 @@ class ServerThread(QThread):
 
     def run(self):
         HOST = '0.0.0.0'  # 로컬호스트 (모든 ip 허용 시 0,0,0,0)
-        PORT = 65413      # 포트번호
+        PORT = 65412      # 포트번호
 
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((HOST, PORT))
@@ -217,19 +216,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tm = taskmanager.taskmanager(self.login_window)
 
         self.battery_limit = 40
+        self.robot0_dump = 9
+        self.robot1_dump = 8
         self.robot_status_list = [{"status" : "idle", "current_x" : 0, "current_y" : 0, "battery" : 50},  #minibot1
-                                  {"status" : "driving", "current_x" : 0, "current_y" : 0, "battery" : 10}]  #minibot2
+                                  {"status" : "error", "current_x" : 0, "current_y" : 0, "battery" : 10}]  #minibot2
         self.checkbox_list = [self.checkbox_basket_1, self.checkbox_basket_2, self.checkbox_basket_3,
                               self.checkbox_basket_4, self.checkbox_basket_5, self.checkbox_basket_6,
                               self.checkbox_init_pos, self.checkbox_dump_1, self.checkbox_dump_2]
-        
+
+        # map 데이터 불러오기
+        self.map_pose_list = self.tm.map_data()
         checkbox_status_list = self.tm.init_checkbox()
+
+        # 1초마다소요시간 확인
+        self.calculator_wait_time() 
+        
         for checkbox_info in checkbox_status_list:
             print(checkbox_info['navigation_point_id'])
             nav_id = checkbox_info['navigation_point_id']
             self.checkbox_list[nav_id-1].setChecked(True)
 
-        
+
         # ROS 스레드 시작
         self.ros_thread = RosThread()
         self.ros_thread.robot0_status_received.connect(self.robot0_status)
@@ -251,8 +258,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.map_job_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         # 로그아웃 버튼
-        # self.logout_button.clicked.connect(self.logout)
-        self.logout_button.clicked.connect(self.tttt)
+        self.logout_button.clicked.connect(self.logout)
+        # self.logout_button.clicked.connect(self.tttt)
 
         # 가상 맵 설정
         pixmap = QPixmap('robot_system_server/EnterpriseManager/ServerGui/virtual_map.png')
@@ -298,9 +305,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.robot1_direction = QPointF(0, 0)
         self.robot2_direction = QPointF(0, 0)
-
-        #map 데이터 불러오기
-        self.map_pose_list = self.tm.map_data()
         
         for i in range(len(self.checkbox_list)):
             self.checkbox_list[i].clicked.connect(lambda checked, index=i: self.checkbox_basket_changed(checked, index))
@@ -480,13 +484,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.job_inprogress(robot_id)
         # print(self.robot_status_list) #robot status
 
-    def calculator_wait_time(self):
+    def tttt(self):
         self.robot_status_list[1] = {"status" : "idle", "current_x" : 0.0, "current_y" : 0.0, "battery" : 50} #minibot2 #test
         self.job_inprogress(1)
 
-    def tttt(self):
-        wait_time = self.tm.calculator_wait_time(self.robot_status_list, self.map_pose_list)
-        print(wait_time)
+    def calculator_wait_time(self):
+        tt = threading.Timer(1, self.calculator_wait_time)
+        tt.start()
+
+        self.wait_time = self.tm.calculator_wait_time(self.robot_status_list, self.map_pose_list)
+        if self.wait_time:
+            for job_info in self.wait_time:
+                self.send_message(f"cb,{job_info['nav_id']},1,{str(int(job_info['wait_time']))}\r\n")
+                # print("test Time", job_info['wait_time'])
 
     def job_inprogress(self,robot_id):
         robot_status = self.robot_status_list[robot_id]
@@ -502,7 +512,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 job_creation_order = self.tm.get_job_creation_order()
                 if job_creation_order:
                     oldest_nav_id = job_creation_order[0]['navigation_point_id']
-                if nav_id != oldest_nav_id and nav_id != 8 and nav_id != 9 and oldest_nav_id != None:
+                if nav_id != oldest_nav_id and nav_id != self.robot0_dump and nav_id != self.robot1_dump and oldest_nav_id != None:
                     order_result = self.tm.optimization_nav_id(job_creation_order, self.robot_status_list, self.map_pose_list, self.battery_limit)
                     if order_result == False:
                         self.tm.job_refresh()
@@ -540,13 +550,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.checkbox_list[nav_id-1].setChecked(False)
         bt_status = "0" #False
 
-        self.send_message(f"cb,{nav_id},{bt_status},{user_id}\n") #Client에서 수신된 데이터 모든 client에 전송
+        self.send_message(f"cb,{nav_id},{bt_status},0\n") #Client에서 수신된 데이터 모든 client에 전송
 
         if detected_sensor == 1:
             if robot_id == 0:
-                nav_id = 8 # 0번 로봇 쓰레기 장소 id
+                nav_id = self.robot0_dump # 0번 로봇 쓰레기 장소 id
             elif robot_id == 1:
-                nav_id = 9 # 1번 로봇 쓰레기 장소 id
+                nav_id = self.robot1_dump # 1번 로봇 쓰레기 장소 id
 
             job_id = self.tm.job_create(1, robot_id, nav_id) #관리자 모드 Job 생성
             job_status = "allocated"
@@ -567,14 +577,16 @@ class MainWindow(QtWidgets.QMainWindow):
             checkbox_status = self.checkbox_list[i].isChecked()
             if checkbox_status == True:
                 checkbox_status = "1"
+                wait_time = self.wait_time[i]['wait_time']
             else:
                 checkbox_status = "0"
+                wait_time = "0"
             string_i = str(i+1)
-            self.send_message(f"cb,{string_i},{checkbox_status}\n") #새로운 Client 접속 시 checkbox 상태 전송
+            self.send_message(f"cb,{string_i},{checkbox_status},{wait_time}\n") #새로운 Client 접속 시 checkbox 상태 전송
 
     def on_message_received(self, message):
         # 수신된 메시지를 처리하는 함수
-        split_message = message.split(",")
+        split_message = message.split(",") # message[0] : command, message[1] : nav_id, message[2] : button status, message[3] : user_id
         print(f"received client msg : {split_message}")
         if split_message[0] == "cb" : # client에서 받은 데이터로 checkbox 상태 변경
             index = int(split_message[1])
@@ -601,7 +613,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     print(f"job status is {job_status}, user = client, Job Cancel")
                     self.tm.Job_cancel(job_id, navigation_point_id = index, user_id = self.userid) #유저 모드 Job 취소
 
-            self.send_message(f"cb,{index},{split_message[2]},{self.userid}\n") #Client에서 수신된 데이터 모든 client에 전송
+            self.send_message(f"cb,{index},{split_message[2]},{self.wait_time}\n") #Client에서 수신된 데이터 모든 client에 전송
 
     def send_message(self, message):
         self.server_thread.send_message(message)
@@ -618,14 +630,14 @@ class MainWindow(QtWidgets.QMainWindow):
         print(f"basket_{index+1} clicked")
         if checked:
             if self.checkbox_list[index].isChecked() == True :
-                if index == 7:
+                if index == self.robot0_dump-1:
                     robot_id = 0
-                elif index == 8:
+                elif index == self.robot1_dump-1:
                     robot_id = 1
                 else:
                     robot_id = None
                 print(f"basket_{index+1}_checked")
-                self.send_message(f"cb,{index+1},1\r\n")
+                self.send_message(f"cb,{index+1},1,0\r\n")
                 job_id = self.tm.job_create(server_id, robot_id, navigation_point_id = index+1) #관리자 모드 Job 생성
                 if job_id != None:
                     self.tm.job_allocate(self.robot_status_list, self.map_pose_list, self.battery_limit) # Job 할당 및 Job table 업데이트, JobLog 추가
@@ -634,7 +646,7 @@ class MainWindow(QtWidgets.QMainWindow):
         elif checked==False:
             if self.checkbox_list[index].isChecked() == False :
                 print(f"basket_{index+1}_unchecked")
-                self.send_message(f"cb,{index+1},0\r\n")
+                self.send_message(f"cb,{index+1},0,0\r\n")
                 job_id, job_status, robot_id = self.tm.Job_jobstatus_check(navigation_point_id = index+1) #Job ID, Job staus 불러오
                 
                 if job_status == 'inprogress':

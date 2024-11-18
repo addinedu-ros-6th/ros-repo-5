@@ -4,8 +4,8 @@ import socket
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 import mysql.connector
 
-server_ip = "192.168.0.10" #Server IP 기입
-server_port = 65413
+server_ip = "192.168.0.24" #Server IP 기입
+server_port = 65412
 
 class ClientThread(QThread):
     message_received = pyqtSignal(str)
@@ -49,7 +49,8 @@ class UserWindow(QtWidgets.QMainWindow):
         
         uic.loadUi('RobotSystemHub/UserGui/user.ui', self)
         self.employee_number = self.login_window.text_id.text() 
-        
+        self.checkbox_basket_1.setText("Waitting Time : 0")
+
         # 로그아웃 버튼 연결
         self.logout_button.clicked.connect(self.logout)
 
@@ -73,6 +74,7 @@ class UserWindow(QtWidgets.QMainWindow):
         self.connect_to_database()
         if self.db_connection:
             self.initialize_checkboxes()
+
     def connect_to_database(self):
         try:
             self.db_connection = mysql.connector.connect(**self.db_config)
@@ -126,12 +128,13 @@ class UserWindow(QtWidgets.QMainWindow):
             split_message = msg.split(",")
             print(split_message)
             
-            if split_message[0] == "cb": #message[0] : cb(Checkbox) message[1] : cb 번호, message[2] : True/False
+            if split_message[0] == "cb": #message[0] : cb(Checkbox) message[1] : cb 번호, message[2] : True/Fals, message[3] : 대기시간
                 if split_message[1] == str(self.basket_id):
                     if split_message[2] == "1":
                         self.checkbox_basket_1.setChecked(True)
                     elif split_message[2] == "0":
                         self.checkbox_basket_1.setChecked(False)
+                    self.checkbox_basket_1.setText(f"Waitting Time : {split_message[3]}s") 
 
     def logout(self):
         self.hide()

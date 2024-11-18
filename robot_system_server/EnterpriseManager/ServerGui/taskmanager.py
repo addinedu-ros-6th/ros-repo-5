@@ -471,7 +471,7 @@ class taskmanager:
                         calculator_job_list.sort(key=lambda x: x["robot_id"]) #로봇 0번부터 Job list 정렬
                         last_job = calculator_job_list[-1]
 
-                        for job_info in calculator_job_list:
+                        for job_info in calculator_job_list:    #1118test
                             current_robot_id = job_info['robot_id']
                             allocated_nav_id = job_info['nav_id']-1
                             current_battery = robot_status_list[current_robot_id]['battery']
