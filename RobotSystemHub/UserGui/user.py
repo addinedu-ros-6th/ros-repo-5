@@ -4,8 +4,8 @@ import socket
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 import mysql.connector
 
-server_ip = "192.168.0.24" #Server IP 기입
-server_port = 65412
+server_ip = "192.168.0.14" #Server IP 기입
+server_port = 65413
 
 class ClientThread(QThread):
     message_received = pyqtSignal(str)

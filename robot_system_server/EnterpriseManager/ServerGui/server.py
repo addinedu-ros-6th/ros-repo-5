@@ -158,7 +158,7 @@ class ServerThread(QThread):
 
     def run(self):
         HOST = '0.0.0.0'  # 로컬호스트 (모든 ip 허용 시 0,0,0,0)
-        PORT = 65412      # 포트번호
+        PORT = 65413      # 포트번호
 
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((HOST, PORT))
@@ -227,26 +227,26 @@ class MainWindow(QtWidgets.QMainWindow):
         # map 데이터 불러오기
         self.map_pose_list = self.tm.map_data()
         checkbox_status_list = self.tm.init_checkbox()
-
-        # 1초마다소요시간 확인
-        self.calculator_wait_time() 
         
         for checkbox_info in checkbox_status_list:
             print(checkbox_info['navigation_point_id'])
             nav_id = checkbox_info['navigation_point_id']
             self.checkbox_list[nav_id-1].setChecked(True)
-
-
+        
         # ROS 스레드 시작
         self.ros_thread = RosThread()
         self.ros_thread.robot0_status_received.connect(self.robot0_status)
         self.ros_thread.jobcompletereq_received.connect(self.job_complete)
         self.ros_thread.start()
-        
+
         # 서버 스레드 생성 및 시작
         self.server_thread = ServerThread()
         self.server_thread.message_received.connect(self.on_message_received)
         self.server_thread.start()
+
+        # 1초마다소요시간 확인
+        self.calculator_wait_time()
+
         self.server_thread.checkboxsync.connect(self.clientcheckboxsync)
         # self.checkbox_list[0].setChecked(True)
 
@@ -577,13 +577,15 @@ class MainWindow(QtWidgets.QMainWindow):
             checkbox_status = self.checkbox_list[i].isChecked()
             if checkbox_status == True:
                 checkbox_status = "1"
-                wait_time = self.wait_time[i]['wait_time']
+                # wait_time = self.wait_time[i]['wait_time']
             else:
                 checkbox_status = "0"
-                wait_time = "0"
-            string_i = str(i+1)
-            self.send_message(f"cb,{string_i},{checkbox_status},{wait_time}\n") #새로운 Client 접속 시 checkbox 상태 전송
+                # wait_time = "0"
 
+            string_i = str(i+1)
+            self.send_message(f"cb,{string_i},{checkbox_status},0\n") #새로운 Client 접속 시 checkbox 상태 전송
+            # self.send_message(f"cb,{string_i},{checkbox_status},{wait_time}\n") #새로운 Client 접속 시 checkbox 상태 전송
+            
     def on_message_received(self, message):
         # 수신된 메시지를 처리하는 함수
         split_message = message.split(",") # message[0] : command, message[1] : nav_id, message[2] : button status, message[3] : user_id
@@ -592,6 +594,7 @@ class MainWindow(QtWidgets.QMainWindow):
             index = int(split_message[1])
             self.userid = int(split_message[3]) #client user id
             if split_message[2] == "1": #Checkbox True
+                wait_time = self.wait_time[index]['wait_time']
                 self.checkbox_list[index-1].setChecked(True)
                 robot_id = None
                 job_id = self.tm.job_create(self.userid, robot_id, navigation_point_id = index) # 유저 모드 Job 생성
@@ -601,9 +604,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     print("Job Create Fail")
 
             elif split_message[2] == "0": #Checkbox False
-                self.checkbox_list[index-1].setChecked(False)
+                self.checkbox_list[index].setChecked(False)
                 job_id, job_status, robot_id = self.tm.Job_jobstatus_check(navigation_point_id = index) #Job ID, Job staus 불러오기
-
+                wait_time = 0
                 if job_status == 'inprogress':
                     print(f"job status is {job_status}, user = client, cancel msg : {robot_id}, 0.0, 0.0, 0.0, 0.0, {job_id}")
                     self.ros_thread.node.send_job_inprogress_and_cancel(robot_id, 0.0, 0.0, 0.0, 0.0, job_id, 0)
@@ -613,7 +616,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     print(f"job status is {job_status}, user = client, Job Cancel")
                     self.tm.Job_cancel(job_id, navigation_point_id = index, user_id = self.userid) #유저 모드 Job 취소
 
-            self.send_message(f"cb,{index},{split_message[2]},{self.wait_time}\n") #Client에서 수신된 데이터 모든 client에 전송
+            self.send_message(f"cb,{index},{split_message[2]},{wait_time}\n") #Client에서 수신된 데이터 모든 client에 전송
 
     def send_message(self, message):
         self.server_thread.send_message(message)

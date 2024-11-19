@@ -174,7 +174,7 @@ class taskmanager:
                     job_count = job_count_info['count']
                     robot_status = robot_status_list[robot_id]['status']
                     #Job이 없는 로봇 로봇만 거리 계산
-                    if (robot_status == 'idle' or robot_status != 'charging') and robot_status_list[robot_id]['battery'] >= battery_limit and job_count == 0:
+                    if (robot_status == 'idle' or robot_status == 'charging') and robot_status_list[robot_id]['battery'] >= battery_limit and job_count == 0:
                         cur_x = float(robot_status_list[robot_id]['current_x'])
                         cur_y = float(robot_status_list[robot_id]['current_y'])
                         dest_x = float(map_pose_list[pending_nav_point_id][2])
