@@ -1,0 +1,4 @@
+srv/ArucoInfo.idl
+srv/ArucoInfo.srv
+srv/ArucoInfo_Request.msg
+srv/ArucoInfo_Response.msg

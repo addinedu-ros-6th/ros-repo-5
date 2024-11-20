@@ -447,7 +447,7 @@ class taskmanager:
                 for inprogress_job in inprogress_job_list:
                     inprogress_robot_id = inprogress_job['robot_id']
                     inprogress_nav_id = inprogress_job['navigation_point_id']
-                    calculator_job_list.append({"robot_id" : inprogress_robot_id, "nav_id" : {inprogress_nav_id}}) #inprogress list
+                    calculator_job_list.append({"robot_id" : inprogress_robot_id, "nav_id" : inprogress_nav_id}) #inprogress list
 
             if job_creation_order: #allocated, pending 기준으로 변경된 순서가 있는지 확인                    
                 for creation_order in job_creation_order:

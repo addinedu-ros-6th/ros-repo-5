@@ -21,8 +21,7 @@ import threading
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 import robot_system_server.EnterpriseManager.ServerGui.taskmanager as taskmanager
-from taskmanager_msgs.srv import JobCompleteReq, JobAllocated
-from taskmanager_msgs.msg import RobotStatus
+from taskmanager_msgs.msg import RobotStatus, JobCompleteReq, JobAllocated
 
 
 class ImageWindow(QDialog):
@@ -48,54 +47,85 @@ class ImageWindow(QDialog):
 class RosSubscriberNode(Node):
     def __init__(self):
         super().__init__('pose_subscriber')
-        self.subscription = self.create_subscription(RobotStatus, 'RobotStatus', self.robot0_status, 10)
-        self.server = self.create_service(JobCompleteReq, 'JobCompleteReq', self.jobcompletereq)
-        self.client = self.create_client(JobAllocated, 'JobAllocatedRes')
+        self.status_sub0 = self.create_subscription(RobotStatus, 'robot0/RobotStatus', self.robot0_status_list, 10)
+        self.status_sub1 = self.create_subscription(RobotStatus, 'robot1/RobotStatus', self.robot1_status_list, 10)
+        self.jobcompletereq_sub0 = self.create_subscription(JobCompleteReq, 'robot0/JobCompleteReq', self.robot0_jobcompletereq, 10)
+        self.jobcompletereq_sub1 = self.create_subscription(JobCompleteReq, 'robot1/JobCompleteReq', self.robot1_jobcompletereq, 10)
+        self.robot0_client = self.create_publisher(JobAllocated, 'robot0/JobAllocatedRes', 10 )
+        self.robot1_client = self.create_publisher(JobAllocated, 'robot1/JobAllocatedRes', 10)
 
-        self.req_complete_job_id = None
+        # robot0 상태 초기화
+        self.robot0_status = None
+        self.robot0_pose_x = 0.0
+        self.robot0_pose_y = 0.0
+        self.robot0_battery = 0
 
-    def robot0_status(self, msg): # receive data
-        self.status = msg.robot_status
-        self.pose_x = msg.x
-        self.pose_y = msg.y
-        self.battery = msg.battery_status
+        # robot1 상태 초기화
+        self.robot1_status = None
+        self.robot1_pose_x = 0.0
+        self.robot1_pose_y = 0.0
+        self.robot1_battery = 0
+
+        self.robot0_req_complete_job_id = None
+        self.robot1_req_complete_job_id = None
+
+    def robot0_status_list(self, msg): # receive data
+        self.robot0_status = msg.robot_status
+        self.robot0_pose_x = msg.x
+        self.robot0_pose_y = msg.y
+        self.robot0_battery = msg.battery_status
 
         #robot0 status print
-        self.get_logger().info(f'robot_status : {self.status},battery : {self.battery}')
+        # self.get_logger().info(f'robot0_status : {self.robot0_status}, robot0_battery : {self.robot0_battery}')
+        self.get_logger().info(f'robot0_status_list : {msg}')
 
-    def jobcompletereq(self, request, response):
-        self.req_complete_job_id = request.job_id
-        self.job_complete_status = request.job_complete # 0 : basket 없음, 1 : Job 완료
-        self.detected_sensor = request.detected_sensor
-        print(f"recv req_complete_job_id : {self.req_complete_job_id}, job_complete_status : {self.job_complete_status} detected sensor : {self.detected_sensor}")
-        
-        response.receive_complete = 1
-        return response
+
+    def robot1_status_list(self, msg): # receive data
+        self.robot1_status = msg.robot_status
+        self.robot1_pose_x = msg.x
+        self.robot1_pose_y = msg.y
+        self.robot1_battery = msg.battery_status
+        #robot0 status print
+        # self.get_logger().info(f'robot1_status : {self.robot1_status}, robot1_battery : {self.robot1_battery}')
+        self.get_logger().info(f'robot1_status_list : {msg}')
+
+    def robot0_jobcompletereq(self, msg):
+        self.robot0_req_complete_job_id = msg.job_id
+        self.robot0_job_complete_status = msg.job_complete # 0 : basket 없음, 1 : Job 완료
+        self.robot0_detected_sensor = msg.detected_sensor
+        # print(f"recv robot0_req_complete_job_id : {self.robot0_req_complete_job_id}, robot0_job_complete_status : {self.robot0_job_complete_status} robot0_detected sensor : {self.robot0_detected_sensor}")
+        self.get_logger().info(f'robot0_jobcompletereq : {msg}')
+
+    def robot1_jobcompletereq(self, msg):
+        self.robot1_req_complete_job_id = msg.job_id
+        self.robot1_job_complete_status = msg.job_complete # 0 : basket 없음, 1 : Job 완료
+        self.robot1_detected_sensor = msg.detected_sensor
+        # print(f"recv robot1_req_complete_job_id : {self.robot1_req_complete_job_id}, robot1_job_complete_status : {self.robot1_job_complete_status} robot0_detected sensor : {self.robot1_detected_sensor}")
+        self.get_logger().info(f'robot1_jobcompletereq : {msg}')
 
     def send_job_inprogress_and_cancel(self, robot_num, x, y, z, w, job_id, nav_id):
         print("asdfasdfsadf",robot_num,type(robot_num))
-        request = JobAllocated.Request()
-        request.robot_num = robot_num
-        request.x = x
-        request.y = y
-        request.z = z
-        request.w = w
-        request.job_id = job_id
-        request.nav_id = nav_id
+        msg = JobAllocated()
+        msg.robot_num = robot_num
+        msg.x = x
+        msg.y = y
+        msg.z = z
+        msg.w = w
+        msg.job_id = job_id
+        msg.nav_id = nav_id
         
-        # 비동기 호출
-        future = self.client.call_async(request)
-        future.add_done_callback(self.response_check)
-
-        self.get_logger().info(f'Sent JobAllocated request for robot {robot_num} to ({x}, {y}, {z}, {w}) with job ID {job_id}, nav id : {nav_id}')
-
-    def response_check(self, future):
-        response = future.result()
-        self.get_logger().info(f"Response received: {response}")
+        if robot_num == 0:
+            self.robot0_client.publish(msg)
+            self.get_logger().info(f'send_job_inprogress_and_cancel : {msg}')
+        elif robot_num == 1:
+            self.robot1_client.publish(msg)
+            self.get_logger().info(f'send_job_inprogress_and_cancel : {msg}')
 
 class RosThread(QThread):
-    robot0_status_received = pyqtSignal(str, float, float, int)
-    jobcompletereq_received = pyqtSignal(int, int, int)
+    robot0_status_list_received = pyqtSignal(str, float, float, int)
+    robot1_status_list_received = pyqtSignal(str, float, float, int)
+    robot0_jobcompletereq_received = pyqtSignal(int, int, int)
+    robot1_jobcompletereq_received = pyqtSignal(int, int, int)
     
     def __init__(self):
         super().__init__()
@@ -105,12 +135,16 @@ class RosThread(QThread):
     def run(self):
         while rp.ok():
             rp.spin_once(self.node)
-            if self.node.req_complete_job_id is not None:
-                self.jobcompletereq_received.emit(self.node.req_complete_job_id, self.node.job_complete_status, self.node.detected_sensor)
-                self.node.req_complete_job_id = None
+            if self.node.robot0_req_complete_job_id is not None:
+                self.robot0_jobcompletereq_received.emit(self.node.robot0_req_complete_job_id, self.node.robot0_job_complete_status, self.node.robot0_detected_sensor)
+                self.node.robot0_req_complete_job_id = None
+            if self.node.robot1_req_complete_job_id is not None:
+                self.robot1_jobcompletereq_received.emit(self.node.robot1_req_complete_job_id, self.node.robot1_job_complete_status, self.node.robot1_detected_sensor)
+                self.node.robot1_req_complete_job_id = None
 
             # 받은 데이터를 PyQt로 전달
-            self.robot0_status_received.emit(self.node.status, self.node.pose_x, self.node.pose_y, self.node.battery)
+            self.robot0_status_list_received.emit(self.node.robot0_status, self.node.robot0_pose_x, self.node.robot0_pose_y, self.node.robot0_battery)
+            self.robot1_status_list_received.emit(self.node.robot1_status, self.node.robot1_pose_x, self.node.robot1_pose_y, self.node.robot1_battery)
 
     def stop(self):
         rp.shutdown()
@@ -218,8 +252,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.battery_limit = 40
         self.robot0_dump = 9
         self.robot1_dump = 8
-        self.robot_status_list = [{"status" : "idle", "current_x" : 0, "current_y" : 0, "battery" : 50},  #minibot1
-                                  {"status" : "error", "current_x" : 0, "current_y" : 0, "battery" : 10}]  #minibot2
+        self.robot_status_list = [{"status" : "idle", "current_x" : 0, "current_y" : 0, "battery" : 0},  #minibot1
+                                  {"status" : "idle", "current_x" : 0, "current_y" : 0, "battery" : 0}]  #minibot2
         self.checkbox_list = [self.checkbox_basket_1, self.checkbox_basket_2, self.checkbox_basket_3,
                               self.checkbox_basket_4, self.checkbox_basket_5, self.checkbox_basket_6,
                               self.checkbox_init_pos, self.checkbox_dump_1, self.checkbox_dump_2]
@@ -235,8 +269,10 @@ class MainWindow(QtWidgets.QMainWindow):
         
         # ROS 스레드 시작
         self.ros_thread = RosThread()
-        self.ros_thread.robot0_status_received.connect(self.robot0_status)
-        self.ros_thread.jobcompletereq_received.connect(self.job_complete)
+        self.ros_thread.robot0_status_list_received.connect(self.robot0_status_list)
+        self.ros_thread.robot1_status_list_received.connect(self.robot1_status_list)
+        self.ros_thread.robot0_jobcompletereq_received.connect(self.robot0_job_complete)
+        self.ros_thread.robot1_jobcompletereq_received.connect(self.robot1_job_complete)
         self.ros_thread.start()
 
         # 서버 스레드 생성 및 시작
@@ -477,10 +513,17 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError:
             QMessageBox.warning(self, "오류", "사진이 존재하지 않습니다.")
 
-    def robot0_status(self, status, x, y, battery):
+    def robot0_status_list(self, status, x, y, battery):
         # ROS에서 받은 데이터를 UI로 업데이트
         self.robot_status_list[0] = {"status" : status, "current_x" : x, "current_y" : y, "battery" : battery}
         robot_id = 0
+        self.job_inprogress(robot_id)
+        # print(self.robot_status_list) #robot status
+
+    def robot1_status_list(self, status, x, y, battery):
+        # ROS에서 받은 데이터를 UI로 업데이트
+        self.robot_status_list[1] = {"status" : status, "current_x" : x, "current_y" : y, "battery" : battery}
+        robot_id = 1
         self.job_inprogress(robot_id)
         # print(self.robot_status_list) #robot status
 
@@ -505,7 +548,7 @@ class MainWindow(QtWidgets.QMainWindow):
         is_inprogress = self.tm.inprogress_job_check(robot_id) #inprogress 있는지 확인
         if is_inprogress == False:
             if (robot_status['status'] != 'error' and robot_status['status'] != 'driving' and robot_status['battery'] > 40):
-                self.tm.job_allocate(self.robot_status_list, self.map_pose_list, self.battery_limit)
+                # self.tm.job_allocate(self.robot_status_list, self.map_pose_list, self.battery_limit)
 
                 #Job 유무 확인
                 nav_id = self.tm.check_job_allocated(robot_id)#job 유무 확인 및 dump job 확인
@@ -515,8 +558,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 if nav_id != oldest_nav_id and nav_id != self.robot0_dump and nav_id != self.robot1_dump and oldest_nav_id != None:
                     order_result = self.tm.optimization_nav_id(job_creation_order, self.robot_status_list, self.map_pose_list, self.battery_limit)
                     if order_result == False:
-                        self.tm.job_refresh()
-                        self.tm.job_allocate(self.robot_status_list, self.map_pose_list, self.battery_limit)
+                        a= 1
+                        # self.tm.job_refresh()
+                        # self.tm.job_allocate(self.robot_status_list, self.map_pose_list, self.battery_limit)
 
                 if nav_id != None:
                     job_id, nav_id = self.tm.job_inprogress(robot_id,nav_id)
@@ -538,7 +582,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 #     self.tm.job_allocate(self.robot_status_list, self.map_pose_list)
                 #     print("Rescheduling complete!!")
                     
-    def job_complete(self, job_id, complete_status, detected_sensor):
+    def robot0_job_complete(self, job_id, complete_status, detected_sensor):
         if complete_status == 0: #basket 없으면 error
             job_status = "error"
         elif complete_status == 1: # basket 있으면 complete
@@ -561,6 +605,31 @@ class MainWindow(QtWidgets.QMainWindow):
             job_id = self.tm.job_create(1, robot_id, nav_id) #관리자 모드 Job 생성
             job_status = "allocated"
             self.tm.job_allocate_dump(1, robot_id, nav_id, job_id, job_status)
+
+    def robot1_job_complete(self, job_id, complete_status, detected_sensor):
+        if complete_status == 0: #basket 없으면 error
+            job_status = "error"
+        elif complete_status == 1: # basket 있으면 complete
+            job_status = "complete"
+
+        nav_id, user_id, robot_id = self.tm.update_job_complete_and_error(job_id, job_status)
+        print(f"Job {job_status}, Job_ID : {job_id}, robot_id : {robot_id}, nav_id : {nav_id}, user_id : {user_id}")
+
+        self.checkbox_list[nav_id-1].setChecked(False)
+        bt_status = "0" #False
+
+        self.send_message(f"cb,{nav_id},{bt_status},0\n") #Client에서 수신된 데이터 모든 client에 전송
+
+        if detected_sensor == 1:
+            if robot_id == 0:
+                nav_id = self.robot0_dump # 0번 로봇 쓰레기 장소 id
+            elif robot_id == 1:
+                nav_id = self.robot1_dump # 1번 로봇 쓰레기 장소 id
+
+            job_id = self.tm.job_create(1, robot_id, nav_id) #관리자 모드 Job 생성
+            job_status = "allocated"
+            self.tm.job_allocate_dump(1, robot_id, nav_id, job_id, job_status)
+
 
     def send_request_job_inprogress(self, robot_id, x, y, z, w, job_id, nav_id):
         # ROS 노드의 send_request 호출

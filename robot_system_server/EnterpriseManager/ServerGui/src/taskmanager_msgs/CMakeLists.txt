@@ -15,6 +15,8 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RobotStatus.msg"
+  "msg/JobAllocated.msg"
+  "msg/JobCompleteReq.msg"
   "srv/JobAllocated.srv"
   "srv/JobCompleteReq.srv"
 )

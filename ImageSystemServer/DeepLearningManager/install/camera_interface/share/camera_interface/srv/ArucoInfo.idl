@@ -1,0 +1,27 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from camera_interface/srv/ArucoInfo.srv
+// generated code does not contain a copyright notice
+
+
+module camera_interface {
+  module srv {
+    @verbatim (language="comment", text=
+      "request ")
+    struct ArucoInfo_Request {
+      boolean aruco_info_req;
+    };
+    struct ArucoInfo_Response {
+      @verbatim (language="comment", text=
+        "response")
+      int64 aruco_id;
+
+      double pos_x;
+
+      double pos_y;
+
+      double pos_z;
+
+      double distance;
+    };
+  };
+};
