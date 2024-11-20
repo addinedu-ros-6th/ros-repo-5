@@ -5,86 +5,89 @@ from camera_interface.srv import BasketInfo
 from camera_interface.srv import PosCalibration
 import threading
 from time import sleep
+
 import math 
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Twist
-# from collections import namedtuple
+from collections import namedtuple
+from rclpy.qos import QoSProfile
 
-# Constants = namedtuple('Constants', ['STATE_CALIBRATE', 'STATE_POS_CHECK'])
-# constants = Constants(STATE_CALIBRATE=1, STATE_POS_CHECK=2)
-
+Constants = namedtuple('Constants', ['STATE_CALIBRATE', 'STATE_COMPLETE'])
+constants = Constants(STATE_CALIBRATE=1, STATE_COMPLETE=2)
 
 class MinibotPosCalibrator(Node):
     def __init__(self):
         super().__init__('minibot_pos_calibrator')
         self.aruco_client = self.create_client(ArucoInfo, '/aruco_marker/pose')
-        #self.basket_service = self.create_service(BasketInfo, 'basket_data', self.receive_basket_data)
-        #self.pos_calib_client = self.create_client( PosCalibration , 'poscal_data')
-        self.bot_vel_pub = self.create_publisher(Twist, '/base_controller/cmd_vel_unstamped', 10)
+        qos_profile = QoSProfile(depth=10)  # 히스토리 버퍼 크기 설정
+        self.basket_service = self.create_service(BasketInfo, 'basket_data', self.receive_basket_data, qos_profile=qos_profile)
+        self.pos_calib_client = self.create_client( PosCalibration , 'poscal_data')
+        self.bot_vel_pub = self.create_publisher(Twist, '/base_controller/cmd_vel_unstamped', 10)      
         
-        while not self.aruco_client.wait_for_service(timeout_sec=1.0):
+        while not self.aruco_client.wait_for_service(timeout_sec=1.0):  
             self.get_logger().info('Aruco Service Waiting...')
         
         self.get_logger().info('Aruco Client Started!!')
 
-        # while not self.pos_calib_client.wait_for_service(timeout_sec=1.0):
-        #     self.get_logger().info('pos_calib Service Waiting...')
+        while not self.pos_calib_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('pos_calib Service Waiting...')
         
-        # self.get_logger().info('pos_calib Client Started!!')
+        self.get_logger().info('pos_calib Client Started!!')
+
+        self.get_logger().info("Minibot Pos Calibrator Started !!")
         
         self.aruco_info = {}
         self.skip_aruco_req = False
-        self.aruco_req_cnt = 0
+        self.find_aruco = False
 
-        self.complete_action = False
+        self.map_aruco_id = { 1 : 44, 2 : 22, 3 : 23, 4 : 8, 5 : 11, 6 : 19 }
+        self.assigned_aruco_id = 0
+        self.basket_is_exist = False
 
-        self.basket_is_exist = True
+        self.state = constants.STATE_CALIBRATE
 
         self.aurco_event = threading.Event()
         self.cpl_event = threading.Event()
 
         # 위치 보정 쓰레드 시작
         self.cal_thread = threading.Thread(target=self.calibrator_thread)
-        self.cal_thread.start()
-        
-        self.get_logger().info("Minibot Pos Calibrator Started !!")
+        self.cal_thread.start()    
 
     def aruco_info_request(self):
         request = ArucoInfo.Request()
         request.aruco_info_req = True
         self.aruco_future = self.aruco_client.call_async(request)
-        
-        # 완료된 후 결과를 처리할 콜백 함수 등록
         self.aruco_future.add_done_callback(self.handle_aruco_response)
 
-    # def cpl_calib_request(self):
-    #     request = PosCalibration.Request()
-    #     request.pos_calib_completes = True
-    #     self.calib_future = self.pos_calib_client.call_async(request)
-
-    #     self.calib_future.add_done_callback(self.handle_calib_response)
+    def cpl_calib_request(self):
+        request = PosCalibration.Request()
+        request.pos_calib_complete = True
+        self.calib_future = self.pos_calib_client.call_async(request)
+        self.get_logger().info(f'send request request.pos_calib_complete : {request.pos_calib_complete}')
+        self.calib_future.add_done_callback(self.handle_calib_response)
 
     def receive_basket_data(self, request, response):
-        response.rec_response = True
+        self.assigned_aruco_id = self.map_aruco_id[request.nav_id]
+        self.basket_is_exist = request.basket_exist
 
-        if request.basket_exist: 
-            self.basket_is_exist = True 
-        else:
-            self.basket_is_exist = False
+        self.get_logger().info(f"request.nav_id : {request.nav_id} / request.basket_exist : {request.basket_exist}")
+        response.rec_response = True
         return response 
 
     def handle_aruco_response(self, future):
         try:
             response = future.result()
             if response and response.ids:
-                self.aruco_req_cnt +=1
-                for idx, marker_id in enumerate(response.ids):
-                    if 11 == marker_id:
-                        self.aruco_info['Position'] = response.positions[idx]
-                        self.aruco_info['Distance'] = response.distance[idx]
-                        self.get_logger().info(f"Aruco ID: {marker_id}, Position: (x: {self.aruco_info['Position'].x}, y: {self.aruco_info['Position'].y}, z: {self.aruco_info['Position'].z}), Distance: {self.aruco_info['Distance']}")
-                        self.skip_aruco_req = True
-                        self.aurco_event.set()            
+                if self.assigned_aruco_id not in response.ids:
+                    self.get_logger().info("Detected Markers not correct")
+                else:
+                    for idx, marker_id in enumerate(response.ids):
+                        if self.assigned_aruco_id == marker_id:
+                            self.aruco_info['Position'] = response.positions[idx]
+                            self.aruco_info['Distance'] = response.distance[idx]
+                            self.get_logger().info(f"Aruco ID: {marker_id}, Position: (x: {self.aruco_info['Position'].x}, y: {self.aruco_info['Position'].y}, z: {self.aruco_info['Position'].z}), Distance: {self.aruco_info['Distance']}")
+                            self.skip_aruco_req = True
+                            self.aurco_event.set()
             else:
                 self.get_logger().info("Detected Aruco Marker not Exist")
         except Exception as e:
@@ -93,8 +96,13 @@ class MinibotPosCalibrator(Node):
     def handle_calib_response(self, future):
         try:            
             response = future.result()
-            self.complete_action = response.rec_response
-            self.cpl_event.set()
+            if response and response.rec_response:
+                self.cpl_event.set()
+                self.get_logger().info("Calibration Completed!!")
+            elif response and not (response.rec_response):
+                self.get_logger().info("rec_response not True ")
+            else:
+                self.get_logger().info("response is None")
         except Exception as e:
             self.get_logger().error(f"Service call Failed: {e}")            
 
@@ -141,9 +149,9 @@ class MinibotPosCalibrator(Node):
                         self.get_logger().info('Aruco Event timeout - Retrying')
                     self.aurco_event.clear()
                 else:
-                    pass
+                    pass               
 
-                if len(self.aruco_info) > 0:         
+                if len(self.aruco_info) > 0 and self.state == constants.STATE_CALIBRATE:         
                     pos_x = round( self.aruco_info['Position'].x, 3 )
                     pos_z = round( self.aruco_info['Position'].z, 3 )
                     xz_dis = math.sqrt( math.pow( pos_x , 2 ) + math.pow( pos_z , 2 ) )                        
@@ -163,27 +171,43 @@ class MinibotPosCalibrator(Node):
                         angle_speed = 0.15            
 
                     if xz_dis > 0.16:
-                        mov_dis = 0.05          
+                        mov_dis = 0.05
                         self.get_logger().info(f"xz_dis : {xz_dis}, move_dis : {mov_dis}, rot_rad : {rot_rad}, rot_deg : {rot_deg}")                                  
                         self.minibot_straight(mov_dis)           
                         sleep(1)
-                        self.minibot_rotate(rot_rad, angle_speed)                                       
-                        self.skip_aruco_req = False
+                        self.minibot_rotate(rot_rad, angle_speed)      
+                        self.skip_aruco_req = False                  
                     else:
-                        mov_dis = 0.045
-                        self.get_logger().info(f"move_dis : {mov_dis}")                                  
-                        self.minibot_straight(mov_dis) 
-                        sleep(1)
-                        self.minibot_rotate(rot_rad, angle_speed)
-                        #self.basket_is_exist = False
-                        #self.cpl_calib_request()
-                        # if not self.cpl_event.wait(timeout=3.0):
-                        #     self.get_logger().info('Not Received Response from FleetManager')                  
-                                            
-                    self.aruco_info.clear()
-                    self.aurco_event.clear()
+                        twist = Twist()
+                        if xz_dis > 0.121 and xz_dis <= 0.16:                            
+                            twist.linear.x = 0.015            
+                            self.bot_vel_pub.publish(twist)      
+                            self.skip_aruco_req = False          
+                        else:
+                            twist.linear.x = 0.0
+                            self.bot_vel_pub.publish(twist)
+                            sleep(0.5)
+                            if rot_rad < 0:
+                                rot_rad = rot_rad -0.03
+                            else:
+                                rot_rad = rot_rad + 0.03
+                            self.minibot_rotate(rot_rad, angle_speed)  
+                            self.skip_aruco_req = True                          
+                            self.state = constants.STATE_COMPLETE 
+
+                        self.get_logger().info(f"xz_dis : {xz_dis}")                                  
+                        self.aruco_info.clear()                        
+                elif self.state == constants.STATE_COMPLETE:       
+                    self.cpl_calib_request()
+                    if not self.cpl_event.wait(timeout=1.0):
+                        self.get_logger().info('Not Received Complete Response from FleetManager - Retry')                  
+                    else:                           
+                        self.basket_is_exist = False
+                        self.state = constants.STATE_CALIBRATE
+                        self.skip_aruco_req = False
+                    self.cpl_event.clear()                              
             else:
-                self.get_logger().info('Basket Info Not Received!!')
+                pass
 
 def main(args=None):
     rclpy.init(args=args)
