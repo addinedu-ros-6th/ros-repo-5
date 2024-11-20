@@ -310,11 +310,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resized_navi_map = navi_map.scaled(self.map.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
         #robot icon 추가 
-        self.robot1_icon = QPixmap("robot_system_server/EnterpriseManager/ServerGui/image/robot1.png").scaled(40, 40, Qt.KeepAspectRatio)  # 로봇 1 이미지 크기 조정
-        self.robot2_icon = QPixmap("robot_system_server/EnterpriseManager/ServerGui/image/robot2.png").scaled(40, 40, Qt.KeepAspectRatio)  # 로봇 2 이미지 크기 조정
+        self.robot1_icon = QPixmap("robot_system_server/EnterpriseManager/ServerGui/image/robot1.png").scaled(50, 50, Qt.KeepAspectRatio)  # 로봇 1 이미지 크기 조정
+        self.robot2_icon = QPixmap("robot_system_server/EnterpriseManager/ServerGui/image/robot2.png").scaled(50, 50, Qt.KeepAspectRatio)  # 로봇 2 이미지 크기 조정
 
-        self.robot1_position = QPointF(810, 150)
-        self.robot2_position = QPointF(850, 150)
+        self.robot1_position = QPointF(1000, 150)
+        self.robot2_position = QPointF(1080, 150)
+
+        painter = QPainter(self.resized_navi_map)
+            
+        # 로봇 아이콘 그리기
+        painter.drawPixmap(int(self.robot1_position.x()), int(self.robot1_position.y()), self.robot1_icon)
+        painter.drawPixmap(int(self.robot2_position.x()), int(self.robot2_position.y()), self.robot2_icon)
+
+        painter.end()
+        
+        # 변환 범위
+        self.y_min, self.y_max = -3.2, 0.3  # y축 범위
+        self.x_min, self.x_max = -0.2, 1.4     # x축 범위
+        self.pixel_y_min, self.pixel_y_max = 100, 500  # QLabel의 y축 픽셀 범위
+        self.pixel_x_min, self.pixel_x_max = 380, 1130  # QLabel의 x축 픽셀 범위
 
         #section 번호 추가 
         self.number_images = {
@@ -323,24 +337,23 @@ class MainWindow(QtWidgets.QMainWindow):
         }
 
         self.number_positions = {
-            (1050,530):   "1",  
-            (900, 370):    "2",  
-            (840, 370):    "3",  
-            (560, 210):    "4",  
-            (350, 480):    "5",  
-            (600, 750):    "6",  
+            (1050, 530):    "1",  
+            (900,  370):    "2",  
+            (840,  370):    "3",  
+            (560,  210):    "4",  
+            (350,  480):    "5",  
+            (700,  530):    "6",  
         }
         
         self.draw_numbers_on_map()
 
         self.map.setPixmap(self.resized_navi_map)
 
+        print(f"QLabel Size: {self.map.size()}")
+
         self.map_timer = QTimer()
         self.map_timer.timeout.connect(self.update_positions)
         self.map_timer.start(100)
-
-        self.robot1_direction = QPointF(0, 0)
-        self.robot2_direction = QPointF(0, 0)
         
         for i in range(len(self.checkbox_list)):
             self.checkbox_list[i].clicked.connect(lambda checked, index=i: self.checkbox_basket_changed(checked, index))
@@ -374,39 +387,50 @@ class MainWindow(QtWidgets.QMainWindow):
         painter.end()
 
     def update_positions(self):
-        """로봇 위치 갱신 및 화면 갱신"""
-        # 현재 위치 업데이트
-        self.robot1_position += self.robot1_direction
-        self.robot2_position += self.robot2_direction
+        """실제 좌표를 QLabel의 픽셀 좌표로 변환"""
+        
+        if self.robot_status_list[0]['status'] != 'idle':
+            x = self.robot_status_list[0]['current_x'] 
+            y = self.robot_status_list[0]['current_y']
 
-        # 경계 조건 처리 (맵 크기에 맞게 반전)
-        map_width = self.resized_navi_map.width()
-        map_height = self.resized_navi_map.height()
+            # X축 변환
+            pixel_y = self.pixel_y_min + ((x - self.x_min) / (self.x_max - self.x_min)) * (self.pixel_y_max - self.pixel_y_min)
+            # Y축 변환
+            pixel_x = self.pixel_x_min + ((y - self.y_min) / (self.y_max - self.y_min)) * (self.pixel_x_max - self.pixel_x_min)
 
-        if not (0 <= self.robot1_position.x() <= map_width and 0 <= self.robot1_position.y() <= map_height):
-            self.robot1_direction *= -1
-        if not (0 <= self.robot2_position.x() <= map_width and 0 <= self.robot2_position.y() <= map_height):
-            self.robot2_direction *= -1
+            self.robot1_position.setX(round(pixel_x, 3))
+            self.robot1_position.setY(round(pixel_y, 3))
 
-        # 화면 갱신
-        self.repaint()
+            # 맵 이미지에 로봇 위치 업데이트
+            painter = QPainter(self.resized_navi_map)
+            
+            # 로봇 아이콘 그리기
+            painter.drawPixmap(int(self.robot1_position.x()), int(self.robot1_position.y()), self.robot1_icon)
+            
+            painter.end()
 
-    def paintEvent(self, event):
-        """QLabel 위에 로봇 이미지 그리기"""
-        painter = QPainter(self.map.pixmap())  # QLabel에 그리기
-        # 로봇 1 그리기
-        painter.drawPixmap(
-            int(self.robot1_position.x()), 
-            int(self.robot1_position.y()), 
-            self.robot1_icon
-        )
-        # 로봇 2 그리기
-        painter.drawPixmap(
-            int(self.robot2_position.x()), 
-            int(self.robot2_position.y()), 
-            self.robot2_icon
-        )
-        painter.end()
+        if self.robot_status_list[1]['status'] != 'idle':
+            x = self.robot_status_list[1]['current_x'] 
+            y = self.robot_status_list[1]['current_y']
+
+            # X축 변환
+            pixel_y = self.pixel_y_min + ((x - self.x_min) / (self.x_max - self.x_min)) * (self.pixel_y_max - self.pixel_y_min)
+            # Y축 변환
+            pixel_x = self.pixel_x_min + ((y - self.y_min) / (self.y_max - self.y_min)) * (self.pixel_x_max - self.pixel_x_min)
+
+            self.robot1_position.setX(round(pixel_x, 3))
+            self.robot1_position.setY(round(pixel_y, 3))
+
+            # 맵 이미지에 로봇 위치 업데이트
+            painter = QPainter(self.resized_navi_map)
+            
+            # 로봇 아이콘 그리기
+            painter.drawPixmap(int(self.robot2_position.x()), int(self.robot2_position.y()), self.robot2_icon)
+            
+            painter.end()
+
+            # QLabel 갱신
+            self.map.setPixmap(self.resized_navi_map)
 
     def update_item(self, text):
         """첫 번째 콤보박스 선택에 따라 두 번째 콤보박스 항목 업데이트"""
