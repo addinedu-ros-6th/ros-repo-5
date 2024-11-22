@@ -23,9 +23,9 @@ class DrivingControll(Node):
     def __init__(self):
         super().__init__('driving_controller')
         
-        #########################################################
+        
 
-        self.domain_id = int(os.environ.get('ROS_DOMAIN_ID'))###################################
+        self.domain_id = int(os.environ.get('ROS_DOMAIN_ID')) 
         if self.domain_id == 90:
             self.robot_name = 'robot0'
             self.other_robot_name = 'robot1'
@@ -46,7 +46,7 @@ class DrivingControll(Node):
         self.stationary_start_time = None
         self.stationary_threshold = 1.5  # 정지 상태로 판단할 시간 (초)
         self.position_threshold = 0.01  
-        #주행시간 초기화
+     
         self.original_start_time = Time(sec=0, nanosec=0)
         self.navigation_start_time = Time(sec=0, nanosec=0) 
 
@@ -55,10 +55,10 @@ class DrivingControll(Node):
 
         #publisher
         self.grid_pub = self.create_publisher(OccupancyGrid, 'grid_map', 10)
-        # Marker Publishe
+     
         self.marker_pub = self.create_publisher(MarkerArray, 'waypoint_markers', 10)
         self.goal_reached_pub = self.create_publisher(Empty, '/goal_reached', 10)
-        # 웨이포인트 그리드 설정
+     
         self.points = [
             [1.340028, -0.003381, 0.0],  # trash1
             [0.840462, -0.739715, 0.0],  # trash2
@@ -75,7 +75,7 @@ class DrivingControll(Node):
             [0.231549,-2.78444,0.0],[0.605831,-2.750030,0.0],[0.615135,-2.225200,0.0],
             ]   
         self.create_timer(1.0, self.publish_markers)
-        # X, Y 좌표 추출 및 정렬
+
         x_coords = sorted(list(set([round(p[0], 4) for p in self.points])))
         y_coords = sorted(list(set([round(p[1], 4) for p in self.points])))
         
@@ -83,8 +83,7 @@ class DrivingControll(Node):
         self.grid_points = [(round(x,4), round(y,4), 0.0) for x, y, _ in self.points]
         self.X_LIST = x_coords
         self.Y_LIST = y_coords
-    
-        # 맵 속성
+
         self.map_resolution = self.resolution
         self.map_origin = (0, 0)
         self.map_data = None
@@ -92,7 +91,7 @@ class DrivingControll(Node):
         self.map_height = 0
         self.map_frame = 'map'
         
-        # 그리드맵 초기화
+
         self.initialize_grid_map()
         
         self.get_logger().info('Navigation Node initialized')
@@ -109,7 +108,7 @@ class DrivingControll(Node):
         
         self.stop_duration = 3.0
 
-         # 현재 로봇의 위치를 저장할 변수
+       
         self.current_robot_pose = [0.0, 0.0, 0.0]  # [x, y, yaw]
         
         # nav2 초기화
@@ -131,7 +130,7 @@ class DrivingControll(Node):
             10
         )
         self.current_path = None 
-        ########################################################발행하는 부분 새로넣엇음
+   
        
         self.path_pub = self.create_publisher(
             Path,
@@ -157,7 +156,7 @@ class DrivingControll(Node):
             10
         )
         self.create_timer(0.5, self.publish_waypoint_status)
-        ##############################################################################
+        
         self.other_robot_waypoints = None
         
 
@@ -166,13 +165,13 @@ class DrivingControll(Node):
         if not self.other_robot_waypoints or not self.waypoint_sequence or not self.is_navigating:
             return False, None
                 
-        # 현재 로봇의 실제 위치 사용
+       
         current_pos = self.get_current_pose()
         
-        # 현재 목표 웨이포인트
+       
         current_wp = self.waypoint_sequence[self.current_waypoint_index]
         
-        # 다른 로봇의 현재 상태 확인
+      
         if not self.other_robot_waypoints.is_navigating:
             return False, None
 
@@ -188,7 +187,6 @@ class DrivingControll(Node):
         )
 
     
-        # 다른 로봇의 현재 웨이포인트 위치 (현재 이동 중인 목표점)
         other_current_wp_idx = self.other_robot_waypoints.current_waypoint_index
         other_robot_target = (
             self.other_robot_waypoints.waypoint_x[other_current_wp_idx],
@@ -198,7 +196,7 @@ class DrivingControll(Node):
             (current_pos[0] - other_robot_target[0])**2 + 
             (current_pos[1] - other_robot_target[1])**2
         )
-        # 안전 거리 설정
+   
         safety_distance = 0.45
         
         if robot_distance < safety_distance:
@@ -261,23 +259,22 @@ class DrivingControll(Node):
         """충돌을 피하기 위한 우회 웨이포인트 찾기"""
         best_waypoint = None
         min_cost = float('inf')
-        safe_distance = 0.4  # 안전 거리 (미터)
+        safe_distance = 0.4  
         
-        # 모든 그리드 포인트에서 적절한 우회 포인트 찾기
         for wp in self.grid_points:
-            # 장애물(다른 로봇의 현재 위치)과의 거리
+          
             distance_to_obstacle = math.sqrt(
                 (wp[0] - obstacle_wp[0])**2 + 
                 (wp[1] - obstacle_wp[1])**2
             )
             
-            # 현재 경로에서 너무 멀리 벗어나지 않도록 체크
+          
             distance_to_path = min(
                 math.sqrt((wp[0] - p[0])**2 + (wp[1] - p[1])**2)
                 for p in self.waypoint_sequence
             )
             
-            # 비용 계산 (장애물과의 거리와 원래 경로와의 거리를 모두 고려)
+            
             if distance_to_obstacle > safe_distance:
                 cost = distance_to_path + (1.0 / distance_to_obstacle)
                 if cost < min_cost:
@@ -286,8 +283,6 @@ class DrivingControll(Node):
         
         return best_waypoint
 
-
-    #####################################################
 
     def publish_waypoint_status(self):
         """현재 로봇의 waypoint 상태를 발행"""
@@ -313,11 +308,7 @@ class DrivingControll(Node):
     def other_waypoint_callback(self, msg):
         """다른 로봇의 waypoint 상태를 받았을 때 처리하는 콜백"""
         self.other_robot_waypoints = msg
-        # self.get_logger().info(
-        #     f'Received waypoint status from {msg.robot_id}: '
-        #     f'Current waypoint {msg.current_waypoint_index + 1}/{msg.total_waypoints}'
-        # )
-##################################################################################
+      
 
     def publish_cmd_vel(self, linear_x, angular_z, duration):
         """cmd_vel 발행하는 함수"""
@@ -372,7 +363,7 @@ class DrivingControll(Node):
     
     def send_request(self, status):
         request = DrivingStatus.Request()
-        # 서버로 보낼 데이터
+      
         request.driving_status = status
 
         future = self.drive_status_client.call_async(request)
@@ -489,7 +480,7 @@ class DrivingControll(Node):
         self.current_path = msg
         self.get_logger().info('Received new path from planner')
        
-        # 경로가 없다면 리턴
+        
         if self.is_navigating:
             return
         
@@ -526,7 +517,7 @@ class DrivingControll(Node):
         goal_pose = msg.poses[-1].pose
         goal_point = (goal_pose.position.x, goal_pose.position.y)
         
-        # 각 샘플링된 포인트에 대해 가장 가까운 웨이포인트 찾기
+        
         waypoint_sequence = []
         used_waypoints = set()  
         
@@ -613,8 +604,8 @@ class DrivingControll(Node):
 
     def navigation_callback(self):
         """주기적으로 내비게이션 상태를 체크하고 웨이포인트 도달을 감지"""
-        if not self.is_navigating or not hasattr(self, 'waypoint_sequence') or not self.waypoint_sequence:#################
-            return#################################
+        if not self.is_navigating or not hasattr(self, 'waypoint_sequence') or not self.waypoint_sequence:
+            return
         
         try:
             self.get_logger().info(
@@ -628,7 +619,7 @@ class DrivingControll(Node):
             should_modify, action = self.check_waypoint_conflict()
             if should_modify:
                 if action == "wait":
-                    # 나중에 출발한 로봇은 정지
+                    
                     self.get_logger().info('웨이포인트 충돌 방지를 위해 대기 중...')
                     self.navigator.cancelTask()
 
@@ -641,11 +632,10 @@ class DrivingControll(Node):
                         f'차이: {abs(my_start_sec - other_start_sec):.4f}초'
                     )
 
-                    # 다른 로봇의 경로와 더 이상 충돌하지 않는지 확인
+                    
                     current_pose = self.get_current_pose()
                     current_target = self.waypoint_sequence[self.current_waypoint_index]
-                    
-                    # 충돌 발생하는지 체크
+                 
                     collision_detected = False
                     for i in range(len(self.other_robot_waypoints.waypoint_x) - 1):
                         if self.check_path_intersection(
@@ -659,7 +649,7 @@ class DrivingControll(Node):
                             collision_detected = True
                             break
                     
-                    # 충돌이 없으면 이동 재개
+                    
                     if not collision_detected:
                         goal_pose = PoseStamped()
                         goal_pose.header.frame_id = self.map_frame
@@ -667,7 +657,7 @@ class DrivingControll(Node):
                         goal_pose.pose.position.x = current_target[0]
                         goal_pose.pose.position.y = current_target[1]
                         
-                        # 다음 웨이포인트를 향한 방향 설정
+                    
                         if self.current_waypoint_index + 1 < len(self.waypoint_sequence):
                             next_wp = self.waypoint_sequence[self.current_waypoint_index + 1]
                             dx = next_wp[0] - current_target[0]
@@ -688,17 +678,16 @@ class DrivingControll(Node):
                         f'우회 지점: ({avoidance_wp[0]:.4f}, {avoidance_wp[1]:.4f})'
                     )
                     
-                    # 현재 내비게이션 작업 취소
+              
                     self.navigator.cancelTask()
                     
-                    # 우회점을 현재 웨이포인트 시퀀스에 삽입
                     self.waypoint_sequence.insert(
                         self.current_waypoint_index + 1,
                         (avoidance_wp[0], avoidance_wp[1], 0.0)
                     )
                     self.get_logger().info(f'우회 웨이포인트 추가됨: ({avoidance_wp[0]:.4f}, {avoidance_wp[1]:.4f})')
                     
-                    # 우회점으로 이동
+                  
                     goal_pose = PoseStamped()
                     goal_pose.header.frame_id = self.map_frame
                     goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
@@ -709,11 +698,11 @@ class DrivingControll(Node):
                     return
 
 
-###################################################################################
+
             current_pose = self.get_current_pose()
             current_waypoint = self.waypoint_sequence[self.current_waypoint_index]
             
-            # 현재 위치와 목표 웨이포인트 사이의 거리 계산
+            
             distance_to_waypoint = math.sqrt(
                 (current_pose[0] - current_waypoint[0])**2 + 
                 (current_pose[1] - current_waypoint[1])**2
@@ -721,12 +710,11 @@ class DrivingControll(Node):
             distance_threshold = 0.3
             
             current_yaw = self.current_robot_pose[2]
-            target_yaw = current_yaw  # 현재 방향 유지
-
-            # 각도 차이 계산 (-π에서 π 사이로 정규화)
+            target_yaw = current_yaw  
+        
             angle_diff = math.atan2(math.sin(target_yaw - current_yaw), 
                                   math.cos(target_yaw - current_yaw))
-            angle_threshold = 0.2  # 약 5.7도
+            angle_threshold = 0.2  
             
             if self.last_position is None:
                 self.last_position = current_pose
@@ -740,11 +728,11 @@ class DrivingControll(Node):
                 
                 current_time = self.get_clock().now()
                 if position_change < self.position_threshold:
-                    # 로봇이 거의 움직이지 않은 경우
+              
                     if self.stationary_start_time is None:
                         self.stationary_start_time = current_time
                     else:
-                            # Duration을 초로 변환하여 비교
+                            
                             time_diff = (current_time - self.stationary_start_time).to_msg().sec
                             if time_diff > self.stationary_threshold:
                                 self.get_logger().info('\n=== Robot Stationary Detected ===')
