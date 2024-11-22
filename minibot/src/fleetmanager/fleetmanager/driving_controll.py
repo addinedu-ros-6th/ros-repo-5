@@ -46,8 +46,9 @@ class DrivingControll(Node):
         self.stationary_start_time = None
         self.stationary_threshold = 1.5  # 정지 상태로 판단할 시간 (초)
         self.position_threshold = 0.01  
-        
-        self.navigation_start_time = Time(sec=0, nanosec=0) #navigator 시작시간 초기화 
+        #주행시간 초기화
+        self.original_start_time = Time(sec=0, nanosec=0)
+        self.navigation_start_time = Time(sec=0, nanosec=0) 
 
         self.status_sent = False
         self.drive_status_client = self.create_client(DrivingStatus, 'DrivingStatus')
@@ -161,79 +162,99 @@ class DrivingControll(Node):
         
 
     def check_waypoint_conflict(self):
-        """다른 로봇과의 웨이포인트 충돌 가능성을 확인하고 우회 경로 생성"""
+        """웨이포인트 충돌 감지"""
         if not self.other_robot_waypoints or not self.waypoint_sequence or not self.is_navigating:
             return False, None
                 
-        # 다음 웨이포인트 위치 가져오기
-        next_wp_index = min(self.current_waypoint_index + 1, len(self.waypoint_sequence) - 1)
-        next_wp = self.waypoint_sequence[next_wp_index]
-        
-        # 다른 로봇의 현재 웨이포인트 가져오기
-        other_current_index = self.other_robot_waypoints.current_waypoint_index
-        other_waypoints = list(zip(
-            self.other_robot_waypoints.waypoint_x,
-            self.other_robot_waypoints.waypoint_y
-        ))
-        
-        if not other_waypoints or other_current_index >= len(other_waypoints):
-            return False, None
-        
-        other_current_wp = other_waypoints[other_current_index]
-        # 현재 위치와 다음 웨이포인트까지의 거리 계산
+        # 현재 로봇의 실제 위치 사용
         current_pos = self.get_current_pose()
-        distance_to_next = math.sqrt(
-            (current_pos[0] - next_wp[0])**2 + 
-            (current_pos[1] - next_wp[1])**2
+        
+        # 현재 목표 웨이포인트
+        current_wp = self.waypoint_sequence[self.current_waypoint_index]
+        
+        # 다른 로봇의 현재 상태 확인
+        if not self.other_robot_waypoints.is_navigating:
+            return False, None
+
+        # 상세 로깅
+        self.get_logger().info(
+            f'\n=== 충돌 감지 상세 정보 ===\n'
+            f'내 로봇: {self.robot_name}\n'
+            f'현재 위치: ({current_pos[0]:.4f}, {current_pos[1]:.4f})\n'
+            f'목표 위치: ({current_wp[0]:.4f}, {current_wp[1]:.4f})\n'
+            f'다른 로봇: {self.other_robot_name}\n'
+            f'이동 중: {self.other_robot_waypoints.is_navigating}\n'
+            f'웨이포인트 진행도: {self.other_robot_waypoints.current_waypoint_index + 1}/{self.other_robot_waypoints.total_waypoints}'
         )
-        
-        # 두 로봇의 웨이포인트 간의 거리 계산
-        distance_between_wps = math.sqrt(
-            (next_wp[0] - other_current_wp[0])**2 + 
-            (next_wp[1] - other_current_wp[1])**2
+
+    
+        # 다른 로봇의 현재 웨이포인트 위치 (현재 이동 중인 목표점)
+        other_current_wp_idx = self.other_robot_waypoints.current_waypoint_index
+        other_robot_target = (
+            self.other_robot_waypoints.waypoint_x[other_current_wp_idx],
+            self.other_robot_waypoints.waypoint_y[other_current_wp_idx]
         )
+        robot_distance = math.sqrt(
+            (current_pos[0] - other_robot_target[0])**2 + 
+            (current_pos[1] - other_robot_target[1])**2
+        )
+        # 안전 거리 설정
+        safety_distance = 0.45
         
-        waypoint_overlap_threshold = min(0.1, distance_to_next * 0.5)
-        
-        if distance_between_wps < waypoint_overlap_threshold and distance_to_next < 0.4: 
-            self.get_logger().info(
-                f'웨이포인트 충돌 감지: {self.robot_name}({next_wp}) - '
-                f'{self.other_robot_name}({other_current_wp})'
-            )
-            
-            if (self.other_robot_waypoints.is_navigating and 
-                self.navigation_start_time and 
-                self.other_robot_waypoints.start_time):
-                
-                my_start_sec = self.navigation_start_time.sec + (self.navigation_start_time.nanosec / 1e9)
-                other_start_sec = self.other_robot_waypoints.start_time.sec + (self.other_robot_waypoints.start_time.nanosec / 1e9)
-                
-                if my_start_sec > other_start_sec:
-                    #
-                    self.get_logger().info(
-                        f'\n=== 충돌 회피를 위한 정지 ===\n'
-                        f'현재 위치: {self.robot_name} - ({next_wp[0]:.4f}, {next_wp[1]:.4f})\n'
-                        f'다른 로봇 위치: {self.other_robot_name}\n'
-                        f'- 현재 웨이포인트: {other_current_wp[0]:.4f}, {other_current_wp[1]:.4f}\n'
-                        f'- 목표 웨이포인트: {other_waypoints[min(other_current_index + 1, len(other_waypoints)-1)][0]:.4f}, '
-                        f'{other_waypoints[min(other_current_index + 1, len(other_waypoints)-1)][1]:.4f}\n'
-                        f'=== 대기 시작 ==='
-                    )
-                    return True, "wait"
-                else:
-                    # 먼저 출발한 로봇은 우회 경로 생성
-                    # 다른 로봇 주변의 안전한 웨이포인트 찾기
-                    avoidance_wp = self.find_avoidance_waypoint(other_current_wp)
-                    if avoidance_wp:
-                        self.get_logger().info(
-                            f'\n=== 충돌 회피 후 이동 재개 ===\n'
-                            f'로봇: {self.robot_name}\n'
-                            f'다른 로봇 위치: {self.other_robot_name} - ({other_current_wp[0]:.4f}, {other_current_wp[1]:.4f})\n'
-                            f'이동 재개 위치: ({next_wp[0]:.4f}, {next_wp[1]:.4f})'
+        if robot_distance < safety_distance:
+            for i in range(len(self.waypoint_sequence) - 1):
+                for j in range(len(self.other_robot_waypoints.waypoint_x) - 1):
+                    if self.check_path_intersection(
+                        self.waypoint_sequence[i],
+                        self.waypoint_sequence[i + 1],
+                        (self.other_robot_waypoints.waypoint_x[j], 
+                        self.other_robot_waypoints.waypoint_y[j]),
+                        (self.other_robot_waypoints.waypoint_x[j + 1],
+                        self.other_robot_waypoints.waypoint_y[j + 1])
+                    ):
+                        self.get_logger().warn(
+                            f'\n=== 경로 교차 감지! ===\n'
+                            f'내 경로: ({self.waypoint_sequence[i][0]:.4f}, {self.waypoint_sequence[i][1]:.4f}) -> '
+                            f'({self.waypoint_sequence[i + 1][0]:.4f}, {self.waypoint_sequence[i + 1][1]:.4f})\n'
+                            f'다른 로봇 경로: ({self.other_robot_waypoints.waypoint_x[j]:.4f}, '
+                            f'{self.other_robot_waypoints.waypoint_y[j]:.4f}) -> '
+                            f'({self.other_robot_waypoints.waypoint_x[j + 1]:.4f}, '
+                            f'{self.other_robot_waypoints.waypoint_y[j + 1]:.4f})'
                         )
-                        return True, ("reroute", avoidance_wp)
+                        
+                        if (self.original_start_time and self.other_robot_waypoints.start_time):
+                            my_start_sec = float(self.original_start_time.sec) + float(self.original_start_time.nanosec) / 1e9
+                            other_start_sec = float(self.other_robot_waypoints.start_time.sec) + float(self.other_robot_waypoints.start_time.nanosec) / 1e9
+                            
+                            self.get_logger().warn(
+                                f'\n=== 시작 시간 비교 ===\n'
+                                f'{self.robot_name}: {my_start_sec:.4f}초\n'
+                                f'{self.other_robot_name}: {other_start_sec:.4f}초\n'
+                                f'차이: {abs(my_start_sec - other_start_sec):.4f}초'
+                            )
+                            
+                            if my_start_sec > other_start_sec:
+                                return True, "wait"
+                            else:
+                                avoidance_wp = self.find_avoidance_waypoint(
+                                    (self.other_robot_waypoints.waypoint_x[j],
+                                    self.other_robot_waypoints.waypoint_y[j])
+                                )
+                                if avoidance_wp:
+                                    return True, ("reroute", avoidance_wp)
         
         return False, None
+    def check_path_intersection(self, p1, p2, p3, p4):
+        """두 경로(선분)가 교차하는지 확인"""
+        def ccw(A, B, C):
+            return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
+        
+        A = (p1[0], p1[1])
+        B = (p2[0], p2[1])
+        C = (p3[0], p3[1])
+        D = (p4[0], p4[1])
+        
+        return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
     
 
     def find_avoidance_waypoint(self, obstacle_wp):
@@ -279,7 +300,7 @@ class DrivingControll(Node):
             msg.waypoint_y = [p[1] for p in self.waypoint_sequence]
             msg.is_navigating = self.is_navigating
             
-            msg.start_time = self.navigation_start_time 
+            msg.start_time = self.original_start_time
             
             self.waypoint_status_pub.publish(msg)
     def other_robot_path_callback(self, msg):
@@ -471,7 +492,7 @@ class DrivingControll(Node):
         # 경로가 없다면 리턴
         if self.is_navigating:
             return
-        self.get_logger().info('Received new path from planner')
+        
         
         if not msg.poses:
             return
@@ -484,6 +505,10 @@ class DrivingControll(Node):
 
         current_time = self.get_clock().now().to_msg()
         self.navigation_start_time = Time(
+        sec=current_time.sec,
+        nanosec=current_time.nanosec
+    )
+        self.original_start_time = Time(
         sec=current_time.sec,
         nanosec=current_time.nanosec
     )
@@ -592,31 +617,88 @@ class DrivingControll(Node):
             return#################################
         
         try:
+            self.get_logger().info(
+            f'\n=== 충돌 감지 체크 시작 ===\n'
+            f'로봇: {self.robot_name}\n'
+            f'다른 로봇 정보 존재: {self.other_robot_waypoints is not None}\n'
+            f'현재 웨이포인트 인덱스: {self.current_waypoint_index}\n'
+            f'총 웨이포인트 수: {len(self.waypoint_sequence)}'
+            )
+
             should_modify, action = self.check_waypoint_conflict()
             if should_modify:
                 if action == "wait":
                     # 나중에 출발한 로봇은 정지
                     self.get_logger().info('웨이포인트 충돌 방지를 위해 대기 중...')
-                    stop_cmd = Twist()
-                    self.cmd_vel_pub.publish(stop_cmd)
+                    self.navigator.cancelTask()
+
+                    my_start_sec = float(self.original_start_time.sec) + float(self.original_start_time.nanosec) / 1e9
+                    other_start_sec = float(self.other_robot_waypoints.start_time.sec) + float(self.other_robot_waypoints.start_time.nanosec) / 1e9
+                    self.get_logger().warn(
+                        f'\n=== 시작 시간 비교 ===\n'
+                        f'{self.robot_name}: {my_start_sec:.4f}초\n'
+                        f'{self.other_robot_name}: {other_start_sec:.4f}초\n'
+                        f'차이: {abs(my_start_sec - other_start_sec):.4f}초'
+                    )
+
+                    # 다른 로봇의 경로와 더 이상 충돌하지 않는지 확인
+                    current_pose = self.get_current_pose()
+                    current_target = self.waypoint_sequence[self.current_waypoint_index]
+                    
+                    # 충돌 발생하는지 체크
+                    collision_detected = False
+                    for i in range(len(self.other_robot_waypoints.waypoint_x) - 1):
+                        if self.check_path_intersection(
+                            current_pose,
+                            current_target,
+                            (self.other_robot_waypoints.waypoint_x[i],
+                            self.other_robot_waypoints.waypoint_y[i]),
+                            (self.other_robot_waypoints.waypoint_x[i + 1],
+                            self.other_robot_waypoints.waypoint_y[i + 1])
+                        ):
+                            collision_detected = True
+                            break
+                    
+                    # 충돌이 없으면 이동 재개
+                    if not collision_detected:
+                        goal_pose = PoseStamped()
+                        goal_pose.header.frame_id = self.map_frame
+                        goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
+                        goal_pose.pose.position.x = current_target[0]
+                        goal_pose.pose.position.y = current_target[1]
+                        
+                        # 다음 웨이포인트를 향한 방향 설정
+                        if self.current_waypoint_index + 1 < len(self.waypoint_sequence):
+                            next_wp = self.waypoint_sequence[self.current_waypoint_index + 1]
+                            dx = next_wp[0] - current_target[0]
+                            dy = next_wp[1] - current_target[1]
+                            theta = math.atan2(dy, dx)
+                            goal_pose.pose.orientation.z = math.sin(theta/2)
+                            goal_pose.pose.orientation.w = math.cos(theta/2)
+                        
+                        self.navigator.goToPose(goal_pose)
+                        self.get_logger().info(f'충돌 위험이 감소하여 경로 재개: ({current_target[0]:.4f}, {current_target[1]:.4f})')
+                    
                     return
                 elif isinstance(action, tuple) and action[0] == "reroute":
-                    # 우회 경로 생성
                     avoidance_wp = action[1]
-                    
-                    # 현재 인덱스 다음에 우회 웨이포인트 삽입
-                    new_sequence = (
-                        self.waypoint_sequence[:self.current_waypoint_index + 1] +
-                        [avoidance_wp] +
-                        self.waypoint_sequence[self.current_waypoint_index + 1:]
+                    self.get_logger().warn(
+                        f'\n=== 충돌 회피 동작: 우회 ===\n'
+                        f'로봇: {self.robot_name}\n'
+                        f'우회 지점: ({avoidance_wp[0]:.4f}, {avoidance_wp[1]:.4f})'
                     )
                     
-                    self.waypoint_sequence = new_sequence
-                    self.get_logger().info(
-                        f'우회 웨이포인트 추가됨: ({avoidance_wp[0]:.4f}, {avoidance_wp[1]:.4f})'
-                    )
+                    # 현재 내비게이션 작업 취소
+                    self.navigator.cancelTask()
                     
-                    # 다음 웨이포인트로 이동
+                    # 우회점을 현재 웨이포인트 시퀀스에 삽입
+                    self.waypoint_sequence.insert(
+                        self.current_waypoint_index + 1,
+                        (avoidance_wp[0], avoidance_wp[1], 0.0)
+                    )
+                    self.get_logger().info(f'우회 웨이포인트 추가됨: ({avoidance_wp[0]:.4f}, {avoidance_wp[1]:.4f})')
+                    
+                    # 우회점으로 이동
                     goal_pose = PoseStamped()
                     goal_pose.header.frame_id = self.map_frame
                     goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
@@ -625,6 +707,8 @@ class DrivingControll(Node):
                     
                     self.navigator.goToPose(goal_pose)
                     return
+
+
 ###################################################################################
             current_pose = self.get_current_pose()
             current_waypoint = self.waypoint_sequence[self.current_waypoint_index]
@@ -703,6 +787,7 @@ class DrivingControll(Node):
                         self.goal_reached_pub = self.create_publisher(Empty, '/goal_reached', 10)
                         self.navigator.cancelTask()
                         self.navigation_start_time = Time(sec=0, nanosec=0)
+                        self.original_start_time = Time(sec=0, nanosec=0)
                         
                         if not self.status_sent:
                             self.send_request(status="driving success")
