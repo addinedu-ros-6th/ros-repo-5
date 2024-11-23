@@ -150,34 +150,6 @@ QPushButton{
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="call_button">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>100</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>24</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Call</string>
-         </property>
-         <property name="icon">
-          <iconset>
-           <normaloff>:/newPrefix/phone.svg</normaloff>:/newPrefix/phone.svg</iconset>
-         </property>
-         <property name="iconSize">
-          <size>
-           <width>30</width>
-           <height>30</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="log_button">
          <property name="minimumSize">
           <size>
@@ -196,6 +168,37 @@ QPushButton{
          <property name="icon">
           <iconset>
            <normaloff>:/newPrefix/book-open.svg</normaloff>:/newPrefix/book-open.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="call_button">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>24</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Call</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>:/newPrefix/phone.svg</normaloff>:/newPrefix/phone.svg</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -253,7 +256,7 @@ QPushButton{
      <string notr="true">background-color: rgb(240, 245, 254);</string>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="Map">
      <widget class="QLabel" name="map">
@@ -321,15 +324,18 @@ QPushButton{
          <widget class="QWidget" name="layoutWidget">
           <property name="geometry">
            <rect>
-            <x>30</x>
+            <x>20</x>
             <y>40</y>
-            <width>321</width>
-            <height>81</height>
+            <width>341</width>
+            <height>111</height>
            </rect>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
             <widget class="QLabel" name="robot1_status_1">
+             <property name="layoutDirection">
+              <enum>Qt::LeftToRight</enum>
+             </property>
              <property name="text">
               <string>robot status</string>
              </property>
@@ -343,9 +349,9 @@ QPushButton{
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="robot1_job_1">
+            <widget class="QLabel" name="robot1_jobid_1">
              <property name="text">
-              <string>robot job</string>
+              <string>Job ID : None</string>
              </property>
             </widget>
            </item>
@@ -387,10 +393,10 @@ QPushButton{
          <widget class="QWidget" name="layoutWidget">
           <property name="geometry">
            <rect>
-            <x>30</x>
+            <x>20</x>
             <y>40</y>
-            <width>311</width>
-            <height>81</height>
+            <width>341</width>
+            <height>111</height>
            </rect>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -409,9 +415,9 @@ QPushButton{
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="robot2_job_1">
+            <widget class="QLabel" name="robot2_jobid_1">
              <property name="text">
-              <string>robot2 job</string>
+              <string>Job ID : None</string>
              </property>
             </widget>
            </item>
@@ -441,86 +447,167 @@ QPushButton{
        </item>
       </layout>
      </widget>
-    </widget>
-    <widget class="QWidget" name="Call">
-     <widget class="QCheckBox" name="checkbox_basket_1">
+     <widget class="QCheckBox" name="checkbox_dump_2">
       <property name="geometry">
        <rect>
-        <x>1050</x>
-        <y>650</y>
+        <x>950</x>
+        <y>380</y>
         <width>92</width>
         <height>23</height>
        </rect>
       </property>
       <property name="text">
-       <string>basket_1</string>
+       <string>dump2</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkbox_basket_2">
+     <widget class="QCheckBox" name="checkbox_init_pos">
       <property name="geometry">
        <rect>
-        <x>570</x>
-        <y>640</y>
+        <x>1120</x>
+        <y>290</y>
         <width>92</width>
         <height>23</height>
        </rect>
       </property>
       <property name="text">
-       <string>basket_2</string>
+       <string>init_pos</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkbox_basket_3">
+     <widget class="QCheckBox" name="checkbox_dump_1">
       <property name="geometry">
        <rect>
-        <x>1090</x>
-        <y>230</y>
+        <x>840</x>
+        <y>380</y>
         <width>92</width>
         <height>23</height>
        </rect>
       </property>
       <property name="text">
-       <string>basket_3</string>
+       <string>dump1</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkbox_basket_4">
-      <property name="geometry">
-       <rect>
-        <x>540</x>
-        <y>230</y>
-        <width>92</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>basket_4</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkbox_basket_5">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>80</x>
-        <y>600</y>
-        <width>92</width>
-        <height>23</height>
+        <y>400</y>
+        <width>221</width>
+        <height>351</height>
        </rect>
       </property>
-      <property name="text">
-       <string>basket_5</string>
-      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QCheckBox" name="checkbox_basket_1">
+         <property name="font">
+          <font>
+           <pointsize>30</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QCheckBox::indicator {
+		width: 40px;
+		height: 40px;
+}</string>
+         </property>
+         <property name="text">
+          <string>basket_1</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkbox_basket_2">
+         <property name="font">
+          <font>
+           <pointsize>30</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QCheckBox::indicator {
+		width: 40px;
+		height: 40px;
+}</string>
+         </property>
+         <property name="text">
+          <string>basket_2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkbox_basket_3">
+         <property name="font">
+          <font>
+           <pointsize>30</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QCheckBox::indicator {
+		width: 40px;
+		height: 40px;
+}</string>
+         </property>
+         <property name="text">
+          <string>basket_3</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkbox_basket_4">
+         <property name="font">
+          <font>
+           <pointsize>30</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QCheckBox::indicator {
+		width: 40px;
+		height: 40px;
+}</string>
+         </property>
+         <property name="text">
+          <string>basket_4</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkbox_basket_5">
+         <property name="font">
+          <font>
+           <pointsize>30</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QCheckBox::indicator {
+		width: 40px;
+		height: 40px;
+}</string>
+         </property>
+         <property name="text">
+          <string>basket_5</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkbox_basket_6">
+         <property name="font">
+          <font>
+           <pointsize>30</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QCheckBox::indicator {
+		width: 40px;
+		height: 40px;
+}</string>
+         </property>
+         <property name="text">
+          <string>basket_6</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
-     <widget class="QCheckBox" name="checkbox_basket_6">
-      <property name="geometry">
-       <rect>
-        <x>130</x>
-        <y>230</y>
-        <width>92</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>basket_6</string>
-      </property>
-     </widget>
+    </widget>
+    <widget class="QWidget" name="Call">
      <widget class="QLabel" name="virtual_map">
       <property name="geometry">
        <rect>
@@ -534,55 +621,6 @@ QPushButton{
        <string>map</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkbox_dump_1">
-      <property name="geometry">
-       <rect>
-        <x>780</x>
-        <y>340</y>
-        <width>92</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>dump1</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkbox_dump_2">
-      <property name="geometry">
-       <rect>
-        <x>890</x>
-        <y>340</y>
-        <width>92</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>dump2</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkbox_init_pos">
-      <property name="geometry">
-       <rect>
-        <x>670</x>
-        <y>340</y>
-        <width>92</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>init_pos</string>
-      </property>
-     </widget>
-     <zorder>virtual_map</zorder>
-     <zorder>checkbox_basket_5</zorder>
-     <zorder>checkbox_basket_4</zorder>
-     <zorder>checkbox_basket_2</zorder>
-     <zorder>checkbox_basket_6</zorder>
-     <zorder>checkbox_basket_3</zorder>
-     <zorder>checkbox_basket_1</zorder>
-     <zorder>checkbox_dump_1</zorder>
-     <zorder>checkbox_dump_2</zorder>
-     <zorder>checkbox_init_pos</zorder>
     </widget>
     <widget class="QWidget" name="Log">
      <widget class="QWidget" name="layoutWidget">
@@ -726,7 +764,7 @@ QPushButton{
          </column>
          <column>
           <property name="text">
-           <string>user_name</string>
+           <string>employee_number</string>
           </property>
          </column>
          <column>

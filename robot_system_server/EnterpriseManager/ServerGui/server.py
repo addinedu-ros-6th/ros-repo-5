@@ -192,7 +192,7 @@ class ServerThread(QThread):
 
     def run(self):
         HOST = '0.0.0.0'  # 로컬호스트 (모든 ip 허용 시 0,0,0,0)
-        PORT = 65413      # 포트번호
+        PORT = 65410      # 포트번호
 
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((HOST, PORT))
@@ -248,16 +248,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # taskmanager 클래스 인스턴스 생성
         self.tm = taskmanager.taskmanager(self.login_window)
-
+        self.lock = threading.Lock()
+        
+        self.prev_oldest_nav_id = None
         self.battery_limit = 40
         self.robot0_dump = 9
         self.robot1_dump = 8
-        self.robot_status_list = [{"status" : "idle", "current_x" : 0, "current_y" : 0, "battery" : 0},  #minibot1
+        self.robot_status_list = [{"status" : "charging", "current_x" : 0, "current_y" : 0, "battery" : 10},  #minibot1
                                   {"status" : "idle", "current_x" : 0, "current_y" : 0, "battery" : 0}]  #minibot2
         self.checkbox_list = [self.checkbox_basket_1, self.checkbox_basket_2, self.checkbox_basket_3,
                               self.checkbox_basket_4, self.checkbox_basket_5, self.checkbox_basket_6,
                               self.checkbox_init_pos, self.checkbox_dump_1, self.checkbox_dump_2]
 
+        self.call_button.hide() # call Tap delete
+        self.checkbox_init_pos.hide()
+
+        # navi_map.scaled(self.map.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
         # map 데이터 불러오기
         self.map_pose_list = self.tm.map_data()
         checkbox_status_list = self.tm.init_checkbox()
@@ -281,10 +287,28 @@ class MainWindow(QtWidgets.QMainWindow):
         self.server_thread.start()
 
         # 1초마다소요시간 확인
-        self.calculator_wait_time()
+        self.calculator_wait_time_qtimer = QTimer()
+        self.calculator_wait_time_qtimer.timeout.connect(self.calculator_wait_time)
+        self.calculator_wait_time_qtimer.start(500)
+        # self.calculator_wait_time()
 
         self.server_thread.checkboxsync.connect(self.clientcheckboxsync)
         # self.checkbox_list[0].setChecked(True)
+
+        #Insert robot Status image
+        idle_img = QPixmap('robot_system_server/EnterpriseManager/ServerGui/img/idle.png')
+        driving_img = QPixmap('robot_system_server/EnterpriseManager/ServerGui/img/driving.png')
+        charging_img = QPixmap('robot_system_server/EnterpriseManager/ServerGui/img/robot_charging.png')
+        full_battery_img = QPixmap('robot_system_server/EnterpriseManager/ServerGui/img/full_battery.png')
+        half_battery_img = QPixmap('robot_system_server/EnterpriseManager/ServerGui/img/half_battery.png')
+        low_battery_img = QPixmap('robot_system_server/EnterpriseManager/ServerGui/img/low_battery.png')
+
+        self.resized_idle_img = idle_img.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.resized_driving_img = driving_img.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.resized_charging_img = charging_img.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.resized_full_battery_img = full_battery_img.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.resized_half_battery_img = half_battery_img.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.resized_low_battery_img = low_battery_img.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
         # stack widget 버튼 이동
         self.main_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
@@ -294,8 +318,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.map_job_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         # 로그아웃 버튼
-        self.logout_button.clicked.connect(self.logout)
-        # self.logout_button.clicked.connect(self.tttt)
+        # self.logout_button.clicked.connect(self.logout)
+        self.logout_button.clicked.connect(self.tttt)
 
         # 가상 맵 설정
         pixmap = QPixmap('robot_system_server/EnterpriseManager/ServerGui/virtual_map.png')
@@ -374,7 +398,44 @@ class MainWindow(QtWidgets.QMainWindow):
         self.end_date.setDate(current_date)
         self.log_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.map_job_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-    
+        self.refresh_timer = QTimer()
+        self.refresh_timer.timeout.connect(self.refresh_data)
+        self.refresh_timer.start(5000)
+
+    def map_job_log(self):
+        try:
+            conn = mysql.connector.connect(
+                host='localhost',
+                user='root ',
+                password='123123',
+                database='trashbot'
+            )
+            cursor = conn.cursor()
+            query = """
+            SELECT u.employee_number, j.id, j.job_status 
+            FROM JobLog jl 
+            JOIN RobotUser u ON jl.user_id = u.id 
+            JOIN Job j ON j.id = jl.job_id 
+            WHERE j.job_status NOT IN ('cancel', 'complete') 
+            GROUP BY u.employee_number, j.id, j.job_status
+            """
+            cursor.execute(query)
+            results = cursor.fetchall()
+            self.map_job_widget.setRowCount(len(results))
+            for row, data in enumerate(results):
+                for col, value in enumerate(data):
+                    item = QTableWidgetItem(str(value))
+                    # 테이블 위젯에 아이템 설정
+                    self.map_job_widget.setItem(row, col, item)
+                    
+        except mysql.connector.Error as err:
+            print(f"데이터베이스 오류: {err}")
+
+    def refresh_data(self):
+        """테이블 데이터 새로고침"""
+        self.map_job_widget.clearContents()
+        self.map_job_log()
+
     def draw_numbers_on_map(self):
         """맵 이미지 위에 숫자 이미지를 고정 위치에 그리기"""
         painter = QPainter(self.resized_navi_map)
@@ -388,49 +449,59 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_positions(self):
         """실제 좌표를 QLabel의 픽셀 좌표로 변환"""
+        navi_map = QPixmap('robot_system_server/EnterpriseManager/ServerGui/image/navi_map.png')
+        self.resized_navi_map = navi_map.scaled(self.map.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        painter = QPainter(self.resized_navi_map)
+
+        for position, number in self.number_positions.items():
+            if number in self.number_images:
+                painter.drawPixmap(position[0], position[1], self.number_images[number])
+
+        painter.end()
+
+
+    # if self.robot_status_list[0]['status'] != 'idle':
+        x = self.robot_status_list[0]['current_x'] 
+        y = self.robot_status_list[0]['current_y']
+
+        # X축 변환
+        pixel_y = self.pixel_y_min + ((x - self.x_min) / (self.x_max - self.x_min)) * (self.pixel_y_max - self.pixel_y_min)
+        # Y축 변환
+        pixel_x = self.pixel_x_min + ((y - self.y_min) / (self.y_max - self.y_min)) * (self.pixel_x_max - self.pixel_x_min)
+
+        self.robot1_position.setX(round(pixel_x, 3))
+        self.robot1_position.setY(round(pixel_y, 3))
+
+        # 맵 이미지에 로봇 위치 업데이트
+        painter = QPainter(self.resized_navi_map)
         
-        if self.robot_status_list[0]['status'] != 'idle':
-            x = self.robot_status_list[0]['current_x'] 
-            y = self.robot_status_list[0]['current_y']
+        # 로봇 아이콘 그리기
+        painter.drawPixmap(int(self.robot1_position.x()), int(self.robot1_position.y()), self.robot1_icon)
+        
+        painter.end()
 
-            # X축 변환
-            pixel_y = self.pixel_y_min + ((x - self.x_min) / (self.x_max - self.x_min)) * (self.pixel_y_max - self.pixel_y_min)
-            # Y축 변환
-            pixel_x = self.pixel_x_min + ((y - self.y_min) / (self.y_max - self.y_min)) * (self.pixel_x_max - self.pixel_x_min)
+    # if self.robot_status_list[1]['status'] != 'idle':
+        x = self.robot_status_list[1]['current_x'] 
+        y = self.robot_status_list[1]['current_y']
 
-            self.robot1_position.setX(round(pixel_x, 3))
-            self.robot1_position.setY(round(pixel_y, 3))
+        # X축 변환
+        pixel_y = self.pixel_y_min + ((x - self.x_min) / (self.x_max - self.x_min)) * (self.pixel_y_max - self.pixel_y_min)
+        # Y축 변환
+        pixel_x = self.pixel_x_min + ((y - self.y_min) / (self.y_max - self.y_min)) * (self.pixel_x_max - self.pixel_x_min)
 
-            # 맵 이미지에 로봇 위치 업데이트
-            painter = QPainter(self.resized_navi_map)
-            
-            # 로봇 아이콘 그리기
-            painter.drawPixmap(int(self.robot1_position.x()), int(self.robot1_position.y()), self.robot1_icon)
-            
-            painter.end()
+        self.robot2_position.setX(round(pixel_x, 3))
+        self.robot2_position.setY(round(pixel_y, 3))
 
-        if self.robot_status_list[1]['status'] != 'idle':
-            x = self.robot_status_list[1]['current_x'] 
-            y = self.robot_status_list[1]['current_y']
+        # 맵 이미지에 로봇 위치 업데이트
+        painter = QPainter(self.resized_navi_map)
+        
+        # 로봇 아이콘 그리기
+        painter.drawPixmap(int(self.robot2_position.x()), int(self.robot2_position.y()), self.robot2_icon)
+        
+        painter.end()
 
-            # X축 변환
-            pixel_y = self.pixel_y_min + ((x - self.x_min) / (self.x_max - self.x_min)) * (self.pixel_y_max - self.pixel_y_min)
-            # Y축 변환
-            pixel_x = self.pixel_x_min + ((y - self.y_min) / (self.y_max - self.y_min)) * (self.pixel_x_max - self.pixel_x_min)
-
-            self.robot1_position.setX(round(pixel_x, 3))
-            self.robot1_position.setY(round(pixel_y, 3))
-
-            # 맵 이미지에 로봇 위치 업데이트
-            painter = QPainter(self.resized_navi_map)
-            
-            # 로봇 아이콘 그리기
-            painter.drawPixmap(int(self.robot2_position.x()), int(self.robot2_position.y()), self.robot2_icon)
-            
-            painter.end()
-
-            # QLabel 갱신
-            self.map.setPixmap(self.resized_navi_map)
+        # QLabel 갱신
+        self.map.setPixmap(self.resized_navi_map)
 
     def update_item(self, text):
         """첫 번째 콤보박스 선택에 따라 두 번째 콤보박스 항목 업데이트"""
@@ -540,25 +611,54 @@ class MainWindow(QtWidgets.QMainWindow):
     def robot0_status_list(self, status, x, y, battery):
         # ROS에서 받은 데이터를 UI로 업데이트
         self.robot_status_list[0] = {"status" : status, "current_x" : x, "current_y" : y, "battery" : battery}
+        self.robot1_battery_1.setText(f"Battery: {str(self.robot_status_list[0]['battery'])}%")
+        self.robot1_status_1.setText(f"Status: {self.robot_status_list[0]['status']}")
         robot_id = 0
         self.job_inprogress(robot_id)
-        # print(self.robot_status_list) #robot status
 
+        if 50 < battery <= 100:
+            self.robot1_battery_1.setPixmap(self.resized_full_battery_img)
+        elif 30 < battery <= 50:
+            self.robot1_battery_1.setPixmap(self.resized_half_battery_img)
+        elif 0 <= battery <= 30:
+            self.robot1_battery_1.setPixmap(self.resized_low_battery_img)
+
+        if status == "idle":
+            self.robot1_status_1.setPixmap(self.resized_idle_img)
+        elif status == "charging":
+            self.robot1_status_1.setPixmap(self.resized_charging_img)
+        elif status == "driving":
+            self.robot1_status_1.setPixmap(self.resized_driving_img)
+        
     def robot1_status_list(self, status, x, y, battery):
         # ROS에서 받은 데이터를 UI로 업데이트
         self.robot_status_list[1] = {"status" : status, "current_x" : x, "current_y" : y, "battery" : battery}
+        self.robot2_battery_1.setText(f"Battery: {str(self.robot_status_list[1]['battery'])}%")
+        self.robot2_status_1.setText(f"Status: {self.robot_status_list[1]['status']}")
         robot_id = 1
         self.job_inprogress(robot_id)
-        # print(self.robot_status_list) #robot status
+
+        if 50 < battery <= 100:
+            self.robot2_battery_1.setPixmap(self.resized_full_battery_img)
+        elif 30 < battery <= 50:
+            self.robot2_battery_1.setPixmap(self.resized_half_battery_img)
+        elif 0 <= battery <= 30:
+            self.robot2_battery_1.setPixmap(self.resized_low_battery_img)
+
+        if status == "idle":
+            self.robot2_status_1.setPixmap(self.resized_idle_img)
+        elif status == "charging":
+            self.robot2_status_1.setPixmap(self.resized_charging_img)
+        elif status == "driving":
+            self.robot2_status_1.setPixmap(self.resized_driving_img)
 
     def tttt(self):
         self.robot_status_list[1] = {"status" : "idle", "current_x" : 0.0, "current_y" : 0.0, "battery" : 50} #minibot2 #test
         self.job_inprogress(1)
 
     def calculator_wait_time(self):
-        tt = threading.Timer(1, self.calculator_wait_time)
-        tt.start()
-
+        # tt = threading.Timer(1, self.calculator_wait_time)
+        # tt.start()
         self.wait_time = self.tm.calculator_wait_time(self.robot_status_list, self.map_pose_list)
         if self.wait_time:
             for job_info in self.wait_time:
@@ -566,51 +666,59 @@ class MainWindow(QtWidgets.QMainWindow):
                 # print("test Time", job_info['wait_time'])
 
     def job_inprogress(self,robot_id):
-        robot_status = self.robot_status_list[robot_id]
-        oldest_nav_id = None
+        with self.lock:
+            robot_status = self.robot_status_list[robot_id]
+            oldest_nav_id = None
 
-        is_inprogress = self.tm.inprogress_job_check(robot_id) #inprogress 있는지 확인
-        if is_inprogress == False:
-            if (robot_status['status'] != 'error' and robot_status['status'] != 'driving' and robot_status['battery'] > 40):
-                # self.tm.job_allocate(self.robot_status_list, self.map_pose_list, self.battery_limit)
+            is_inprogress = self.tm.inprogress_job_check(robot_id) #inprogress 있는지 확인
+            if is_inprogress == False:
+                if ((robot_status['status'] == 'idle' or robot_status['status'] == 'charging') and robot_status['battery'] > 40):
+                    # self.tm.job_allocate(self.robot_status_list, self.map_pose_list, self.battery_limit)
 
-                #Job 유무 확인
-                nav_id = self.tm.check_job_allocated(robot_id)#job 유무 확인 및 dump job 확인
-                job_creation_order = self.tm.get_job_creation_order()
-                if job_creation_order:
-                    oldest_nav_id = job_creation_order[0]['navigation_point_id']
-                if nav_id != oldest_nav_id and nav_id != self.robot0_dump and nav_id != self.robot1_dump and oldest_nav_id != None:
-                    order_result = self.tm.optimization_nav_id(job_creation_order, self.robot_status_list, self.map_pose_list, self.battery_limit)
-                    if order_result == False:
-                        a= 1
-                        # self.tm.job_refresh()
-                        # self.tm.job_allocate(self.robot_status_list, self.map_pose_list, self.battery_limit)
+                    #Job 유무 확인
+                    nav_id = self.tm.check_job_allocated(robot_id)#job 유무 확인 및 dump job 확인
+                    job_creation_order = self.tm.get_job_creation_order()
+                    if job_creation_order:
+                        oldest_nav_id = job_creation_order[0]['navigation_point_id']
+                    if self.prev_oldest_nav_id != oldest_nav_id:
+                        if nav_id != oldest_nav_id and nav_id != self.robot0_dump and nav_id != self.robot1_dump and oldest_nav_id != None:
+                            order_result = self.tm.optimization_nav_id(job_creation_order, self.robot_status_list, self.map_pose_list, self.battery_limit)
+                            if order_result == False:
+                                self.tm.job_refresh()
+                                self.tm.job_allocate(self.robot_status_list, self.map_pose_list, self.battery_limit)
+                                self.prev_oldest_nav_id = oldest_nav_id
 
-                if nav_id != None:
-                    job_id, nav_id = self.tm.job_inprogress(robot_id,nav_id)
-                    
-                    x = float(self.map_pose_list[nav_id-1][2])
-                    y = float(self.map_pose_list[nav_id-1][3])
-                    z = float(self.map_pose_list[nav_id-1][4])
-                    w = float(self.map_pose_list[nav_id-1][5])
+                    if nav_id != None:
+                        job_id, nav_id = self.tm.job_inprogress(robot_id,nav_id)
+                        
+                        x = float(self.map_pose_list[nav_id-1][2])
+                        y = float(self.map_pose_list[nav_id-1][3])
+                        z = float(self.map_pose_list[nav_id-1][4])
+                        w = float(self.map_pose_list[nav_id-1][5])
 
-                    print(f"inprogress request,{robot_id}, {x}, {y}, {z}, {w}, {job_id}")
-                    self.send_request_job_inprogress(robot_id, x, y, z, w, job_id, nav_id)
-                # elif nav_id != None and nav_id != oldest_nav_id:
+                        print(f"inprogress request,{robot_id}, {x}, {y}, {z}, {w}, {job_id}")
+                        self.send_request_job_inprogress(robot_id, x, y, z, w, job_id, nav_id)
+                        if robot_id == 0:
+                            self.robot1_jobid_1.setText(f"Job ID : {str(job_id)}")
+                        elif robot_id == 1:
+                            self.robot2_jobid_1.setText(f"Job ID : {str(job_id)}")
 
-            # elif self.robot_status_list[i]['status'] == 'driving':
-                # if self.robot_status_list[i]['battery'] > 40:
-                #     pass
-                # else:
-                #     self.tm.job_refresh()
-                #     self.tm.job_allocate(self.robot_status_list, self.map_pose_list)
-                #     print("Rescheduling complete!!")
+                    # elif nav_id != None and nav_id != oldest_nav_id:
+
+                # elif self.robot_status_list[i]['status'] == 'driving':
+                    # if self.robot_status_list[i]['battery'] > 40:
+                    #     pass
+                    # else:
+                    #     self.tm.job_refresh()
+                    #     self.tm.job_allocate(self.robot_status_list, self.map_pose_list)
+                    #     print("Rescheduling complete!!")
                     
     def robot0_job_complete(self, job_id, complete_status, detected_sensor):
         if complete_status == 0: #basket 없으면 error
             job_status = "error"
         elif complete_status == 1: # basket 있으면 complete
             job_status = "complete"
+            self.robot1_jobid_1.setText("Job ID : None")
 
         nav_id, user_id, robot_id = self.tm.update_job_complete_and_error(job_id, job_status)
         print(f"Job {job_status}, Job_ID : {job_id}, robot_id : {robot_id}, nav_id : {nav_id}, user_id : {user_id}")
@@ -627,6 +735,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 nav_id = self.robot1_dump # 1번 로봇 쓰레기 장소 id
 
             job_id = self.tm.job_create(1, robot_id, nav_id) #관리자 모드 Job 생성
+            self.checkbox_list[nav_id-1].setChecked(True)
+
             job_status = "allocated"
             self.tm.job_allocate_dump(1, robot_id, nav_id, job_id, job_status)
 
@@ -635,6 +745,7 @@ class MainWindow(QtWidgets.QMainWindow):
             job_status = "error"
         elif complete_status == 1: # basket 있으면 complete
             job_status = "complete"
+            self.robot2_jobid_1.setText("Job ID : None")
 
         nav_id, user_id, robot_id = self.tm.update_job_complete_and_error(job_id, job_status)
         print(f"Job {job_status}, Job_ID : {job_id}, robot_id : {robot_id}, nav_id : {nav_id}, user_id : {user_id}")
@@ -687,7 +798,7 @@ class MainWindow(QtWidgets.QMainWindow):
             index = int(split_message[1])
             self.userid = int(split_message[3]) #client user id
             if split_message[2] == "1": #Checkbox True
-                wait_time = self.wait_time[index]['wait_time']
+                # wait_time = self.wait_time[index]['wait_time']
                 self.checkbox_list[index-1].setChecked(True)
                 robot_id = None
                 job_id = self.tm.job_create(self.userid, robot_id, navigation_point_id = index) # 유저 모드 Job 생성
@@ -697,7 +808,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     print("Job Create Fail")
 
             elif split_message[2] == "0": #Checkbox False
-                self.checkbox_list[index].setChecked(False)
+                self.checkbox_list[index-1].setChecked(False)
                 job_id, job_status, robot_id = self.tm.Job_jobstatus_check(navigation_point_id = index) #Job ID, Job staus 불러오기
                 wait_time = 0
                 if job_status == 'inprogress':
@@ -709,7 +820,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     print(f"job status is {job_status}, user = client, Job Cancel")
                     self.tm.Job_cancel(job_id, navigation_point_id = index, user_id = self.userid) #유저 모드 Job 취소
 
-            self.send_message(f"cb,{index},{split_message[2]},{wait_time}\n") #Client에서 수신된 데이터 모든 client에 전송
+                self.send_message(f"cb,{index},{split_message[2]},{wait_time}\n") #Client에서 수신된 데이터 모든 client에 전송
 
     def send_message(self, message):
         self.server_thread.send_message(message)
@@ -753,7 +864,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if job_status == 'pending' or job_status == 'allocated':
                     print(f"cancel job id : {job_id}, user = server, Job Cancel")
                     self.tm.Job_cancel(job_id, navigation_point_id = index+1, user_id = server_id) #관리자보드  모드 Job 취소
-
+    
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     login_window = QtWidgets.QMainWindow()

@@ -169,131 +169,132 @@ class taskmanager:
                 pending_nav_point_id=pending['navigation_point_id'] - 1
                 if robot_allocated_list:
                     last_line = robot_allocated_list[-1]
-                for job_count_info in robot_job_count_info:
-                    robot_id = job_count_info['robot_id']
-                    job_count = job_count_info['count']
-                    robot_status = robot_status_list[robot_id]['status']
-                    #Job이 없는 로봇 로봇만 거리 계산
-                    if (robot_status == 'idle' or robot_status == 'charging') and robot_status_list[robot_id]['battery'] >= battery_limit and job_count == 0:
-                        cur_x = float(robot_status_list[robot_id]['current_x'])
-                        cur_y = float(robot_status_list[robot_id]['current_y'])
-                        dest_x = float(map_pose_list[pending_nav_point_id][2])
-                        dest_y = float(map_pose_list[pending_nav_point_id][3])
-                        globals()[f"robot{robot_id}_eta"] = math.sqrt((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2) #eta : Estimate Time Arrive
-                        print([f"robot{robot_id}_eta"],globals()[f"robot{robot_id}_eta"] )
-                    else:
-                        globals()[f"robot{robot_id}_eta"] = 0 #eta : Estimate Time Arrive
-                prev_robot_id = None
-
-                #inprogress, allocated 된 job이 있을 경우 총 거리 계산
-                if robot_allocated_list: 
-                    for row in robot_allocated_list:
-                        robot_id = row['robot_id']
+                if robot_job_count_info:
+                    for job_count_info in robot_job_count_info:
+                        robot_id = job_count_info['robot_id']
+                        job_count = job_count_info['count']
                         robot_status = robot_status_list[robot_id]['status']
-                        if robot_status_list[robot_id]['battery'] >= battery_limit and (robot_status == 'idle' or robot_status == 'driving'):
-                            current_robot_id = robot_id
-                            current_nav_point_id = row['navigation_point_id'] - 1
-                            print("nav_point_id", current_nav_point_id + 1)
-                            if (current_robot_id != prev_robot_id): #처음 Job은 현재 위치에서 목적지까지의 시간 계산
-                                cur_x = float(robot_status_list[robot_id]['current_x'])
-                                cur_y = float(robot_status_list[robot_id]['current_y'])
-                                print("first cur",cur_x,cur_y)
-                                dest_x = float(map_pose_list[current_nav_point_id][2])
-                                dest_y = float(map_pose_list[current_nav_point_id][3])
-                                print("first dest",dest_x,dest_y)
-                                globals()[f"robot{robot_id}_eta"] += math.sqrt((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2) #eta : Estimate Time Arrive
-                                print(f"robot{robot_id}_eta", globals()[f"robot{robot_id}_eta"])
-                            elif current_robot_id == prev_robot_id:
-                                cur_x = float(map_pose_list[prev_nav_point_id][2])
-                                cur_y = float(map_pose_list[prev_nav_point_id][3])
-                                print("second cur",cur_x,cur_y)
-                                dest_x = float(map_pose_list[current_nav_point_id][2])
-                                dest_y = float(map_pose_list[current_nav_point_id][3])
-                                print("second dest",dest_x,dest_y)
-                                globals()[f"robot{robot_id}_eta"] += math.sqrt((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2)
-                                print(f"robot{robot_id}_eta", globals()[f"robot{robot_id}_eta"])
-                            
-                            if (current_robot_id-1 == prev_robot_id):# and prev_nav_point_id != 0): #로봇이 바꼈을 때, 이전 로봇의 total 시간 계산 (last job과 pending job 과의 시간 계산)
-                                cur_x = float(map_pose_list[prev_nav_point_id][2])
-                                cur_y = float(map_pose_list[prev_nav_point_id][3])
-                                print("total",cur_x,cur_y)               
-                                dest_x = float(map_pose_list[pending_nav_point_id][2])
-                                dest_y = float(map_pose_list[pending_nav_point_id][3])
-                                print("total",dest_x,dest_y)               
-                                globals()[f"robot{robot_id-1}_eta"] += math.sqrt((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2)
-                                print("result : ",f"robot{robot_id-1}_eta", globals()[f"robot{robot_id-1}_eta"])
+                        #Job이 없는 로봇 로봇만 거리 계산
+                        if (robot_status == 'idle' or robot_status == 'charging') and robot_status_list[robot_id]['battery'] >= battery_limit and job_count == 0:
+                            cur_x = float(robot_status_list[robot_id]['current_x'])
+                            cur_y = float(robot_status_list[robot_id]['current_y'])
+                            dest_x = float(map_pose_list[pending_nav_point_id][2])
+                            dest_y = float(map_pose_list[pending_nav_point_id][3])
+                            globals()[f"robot{robot_id}_eta"] = math.sqrt((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2) #eta : Estimate Time Arrive
+                            print([f"robot{robot_id}_eta"],globals()[f"robot{robot_id}_eta"] )
+                        else:
+                            globals()[f"robot{robot_id}_eta"] = 0 #eta : Estimate Time Arrive
+                    prev_robot_id = None
 
-                            if row == last_line and len(robot_allocated_list) > 1:  #마지막 로봇일 때, 마지막 job과 pending job 거리 계산
-                                cur_x = float(map_pose_list[current_nav_point_id][2])
-                                cur_y = float(map_pose_list[current_nav_point_id][3])
-                                print("total",cur_x,cur_y)               
-                                dest_x = float(map_pose_list[pending_nav_point_id][2])
-                                dest_y = float(map_pose_list[pending_nav_point_id][3])
-                                print("total",dest_x,dest_y)               
-                                globals()[f"robot{robot_id}_eta"] += math.sqrt((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2)
-                                print(f"robot{robot_id}_eta", globals()[f"robot{robot_id}_eta"])
+                    #inprogress, allocated 된 job이 있을 경우 총 거리 계산
+                    if robot_allocated_list: 
+                        for row in robot_allocated_list:
+                            robot_id = row['robot_id']
+                            robot_status = robot_status_list[robot_id]['status']
+                            if robot_status_list[robot_id]['battery'] >= battery_limit and (robot_status == 'idle' or robot_status == 'driving'):
+                                current_robot_id = robot_id
+                                current_nav_point_id = row['navigation_point_id'] - 1
+                                print("nav_point_id", current_nav_point_id + 1)
+                                if (current_robot_id != prev_robot_id): #처음 Job은 현재 위치에서 목적지까지의 시간 계산
+                                    cur_x = float(robot_status_list[robot_id]['current_x'])
+                                    cur_y = float(robot_status_list[robot_id]['current_y'])
+                                    print("first cur",cur_x,cur_y)
+                                    dest_x = float(map_pose_list[current_nav_point_id][2])
+                                    dest_y = float(map_pose_list[current_nav_point_id][3])
+                                    print("first dest",dest_x,dest_y)
+                                    globals()[f"robot{robot_id}_eta"] += math.sqrt((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2) #eta : Estimate Time Arrive
+                                    print(f"robot{robot_id}_eta", globals()[f"robot{robot_id}_eta"])
+                                elif current_robot_id == prev_robot_id:
+                                    cur_x = float(map_pose_list[prev_nav_point_id][2])
+                                    cur_y = float(map_pose_list[prev_nav_point_id][3])
+                                    print("second cur",cur_x,cur_y)
+                                    dest_x = float(map_pose_list[current_nav_point_id][2])
+                                    dest_y = float(map_pose_list[current_nav_point_id][3])
+                                    print("second dest",dest_x,dest_y)
+                                    globals()[f"robot{robot_id}_eta"] += math.sqrt((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2)
+                                    print(f"robot{robot_id}_eta", globals()[f"robot{robot_id}_eta"])
+                                
+                                if (current_robot_id-1 == prev_robot_id):# and prev_nav_point_id != 0): #로봇이 바꼈을 때, 이전 로봇의 total 시간 계산 (last job과 pending job 과의 시간 계산)
+                                    cur_x = float(map_pose_list[prev_nav_point_id][2])
+                                    cur_y = float(map_pose_list[prev_nav_point_id][3])
+                                    print("total",cur_x,cur_y)               
+                                    dest_x = float(map_pose_list[pending_nav_point_id][2])
+                                    dest_y = float(map_pose_list[pending_nav_point_id][3])
+                                    print("total",dest_x,dest_y)               
+                                    globals()[f"robot{robot_id-1}_eta"] += math.sqrt((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2)
+                                    print("result : ",f"robot{robot_id-1}_eta", globals()[f"robot{robot_id-1}_eta"])
 
-                            prev_robot_id = robot_id
-                            prev_nav_point_id = current_nav_point_id
+                                if row == last_line and len(robot_allocated_list) > 1:  #마지막 로봇일 때, 마지막 job과 pending job 거리 계산
+                                    cur_x = float(map_pose_list[current_nav_point_id][2])
+                                    cur_y = float(map_pose_list[current_nav_point_id][3])
+                                    print("total",cur_x,cur_y)               
+                                    dest_x = float(map_pose_list[pending_nav_point_id][2])
+                                    dest_y = float(map_pose_list[pending_nav_point_id][3])
+                                    print("total",dest_x,dest_y)               
+                                    globals()[f"robot{robot_id}_eta"] += math.sqrt((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2)
+                                    print(f"robot{robot_id}_eta", globals()[f"robot{robot_id}_eta"])
 
-                    #eta 최소값 변수 구하기 (이미 할당된 로봇이 있을 경우)
-                    for i in range(len(robot_status_list)-1):
-                        if globals()[f"robot{i}_eta"] != 0 and globals()[f"robot{i+1}_eta"] != 0:
-                        # if robot_status_list[i]['battery'] > battery_limit and robot_status_list[i]['status'] == 'idle':
-                            if globals()[f"robot{i}_eta"] > globals()[f"robot{i+1}_eta"]:
+                                prev_robot_id = robot_id
+                                prev_nav_point_id = current_nav_point_id
+
+                        #eta 최소값 변수 구하기 (이미 할당된 로봇이 있을 경우)
+                        for i in range(len(robot_status_list)-1):
+                            if globals()[f"robot{i}_eta"] != 0 and globals()[f"robot{i+1}_eta"] != 0:
+                            # if robot_status_list[i]['battery'] > battery_limit and robot_status_list[i]['status'] == 'idle':
+                                if globals()[f"robot{i}_eta"] > globals()[f"robot{i+1}_eta"]:
+                                    eta_min_robot = i+1
+                                    allocated_result = True
+                                else:
+                                    eta_min_robot = i
+                                    allocated_result = True
+                            elif globals()[f"robot{i}_eta"] == 0 and globals()[f"robot{i+1}_eta"] != 0:
                                 eta_min_robot = i+1
                                 allocated_result = True
-                            else:
+                            elif globals()[f"robot{i}_eta"] != 0 and globals()[f"robot{i+1}_eta"] == 0:
                                 eta_min_robot = i
                                 allocated_result = True
-                        elif globals()[f"robot{i}_eta"] == 0 and globals()[f"robot{i+1}_eta"] != 0:
-                            eta_min_robot = i+1
-                            allocated_result = True
-                        elif globals()[f"robot{i}_eta"] != 0 and globals()[f"robot{i+1}_eta"] == 0:
-                            eta_min_robot = i
-                            allocated_result = True
-                    if allocated_result == True:
-                        print(f"job allocated robot : {eta_min_robot}, job_id : {pending['job_id']}")
-                        create_at = datetime.now()
-                        self.Job_jobstatus_update(connection, cursor, pending['job_id'], 'allocated')
-                        self.JobLog_add(connection, cursor, row['user_id'], eta_min_robot, pending_nav_point_id+1,create_at, 'allocated', pending['job_id'])
+                        if allocated_result == True:
+                            print(f"job allocated robot : {eta_min_robot}, job_id : {pending['job_id']}")
+                            create_at = datetime.now()
+                            self.Job_jobstatus_update(connection, cursor, pending['job_id'], 'allocated')
+                            self.JobLog_add(connection, cursor, row['user_id'], eta_min_robot, pending_nav_point_id+1,create_at, 'allocated', pending['job_id'])
 
-                        cursor.execute(job_list_sql)
-                        Job_pending_list = cursor.fetchall()
-                        cursor.execute(allocated_job_info_sql)
-                        robot_allocated_list = cursor.fetchall()
-                        cursor.execute(robot_job_count_info_sql)
-                        robot_job_count_info = cursor.fetchall()
-                        allocated_result = False
-                else:
-                    #eta 최소값 변수 구하기 (할당된 로봇이 없을 경우)
-                    for i in range(len(robot_status_list)-1):
-                        if globals()[f"robot{i}_eta"] != 0 and globals()[f"robot{i+1}_eta"] != 0:
-                            allocated_result = True
-                            if globals()[f"robot{i}_eta"] > globals()[f"robot{i+1}_eta"]:
+                            cursor.execute(job_list_sql)
+                            Job_pending_list = cursor.fetchall()
+                            cursor.execute(allocated_job_info_sql)
+                            robot_allocated_list = cursor.fetchall()
+                            cursor.execute(robot_job_count_info_sql)
+                            robot_job_count_info = cursor.fetchall()
+                            allocated_result = False
+                    else:
+                        #eta 최소값 변수 구하기 (할당된 로봇이 없을 경우)
+                        for i in range(len(robot_status_list)-1):
+                            if globals()[f"robot{i}_eta"] != 0 and globals()[f"robot{i+1}_eta"] != 0:
+                                allocated_result = True
+                                if globals()[f"robot{i}_eta"] > globals()[f"robot{i+1}_eta"]:
+                                    eta_min_robot = i+1
+                                else:
+                                    eta_min_robot = i
+
+                            elif globals()[f"robot{i}_eta"] == 0 and globals()[f"robot{i+1}_eta"] != 0:
                                 eta_min_robot = i+1
-                            else:
+                                allocated_result = True
+                            elif globals()[f"robot{i}_eta"] != 0 and globals()[f"robot{i+1}_eta"] == 0:
                                 eta_min_robot = i
+                                allocated_result = True
+                        if allocated_result == True:
+                            print(f"job allocated robot : {eta_min_robot}, job_id : {pending['job_id']}")
+                            create_at = datetime.now()
+                            self.Job_jobstatus_update(connection, cursor, pending['job_id'], 'allocated')
+                            self.JobLog_add(connection, cursor, pending['user_id'], eta_min_robot, pending_nav_point_id+1,create_at, 'allocated', pending['job_id'])
+                            allocated_result = False
 
-                        elif globals()[f"robot{i}_eta"] == 0 and globals()[f"robot{i+1}_eta"] != 0:
-                            eta_min_robot = i+1
-                            allocated_result = True
-                        elif globals()[f"robot{i}_eta"] != 0 and globals()[f"robot{i+1}_eta"] == 0:
-                            eta_min_robot = i
-                            allocated_result = True
-                    if allocated_result == True:
-                        print(f"job allocated robot : {eta_min_robot}, job_id : {pending['job_id']}")
-                        create_at = datetime.now()
-                        self.Job_jobstatus_update(connection, cursor, pending['job_id'], 'allocated')
-                        self.JobLog_add(connection, cursor, pending['user_id'], eta_min_robot, pending_nav_point_id+1,create_at, 'allocated', pending['job_id'])
-                        allocated_result = False
-
-                        cursor.execute(job_list_sql)
-                        Job_pending_list = cursor.fetchall()
-                        cursor.execute(allocated_job_info_sql)
-                        robot_allocated_list = cursor.fetchall()
-                        cursor.execute(robot_job_count_info_sql)
-                        robot_job_count_info = cursor.fetchall()
+                            cursor.execute(job_list_sql)
+                            Job_pending_list = cursor.fetchall()
+                            cursor.execute(allocated_job_info_sql)
+                            robot_allocated_list = cursor.fetchall()
+                            cursor.execute(robot_job_count_info_sql)
+                            robot_job_count_info = cursor.fetchall()
         except Exception as e:
                     print(f"메시지 전송 오류: {e}")
         finally:
@@ -535,8 +536,10 @@ class taskmanager:
                     old_robot_order_list.append(job_creation_order[i]['navigation_point_id'])
                     current_robot_order_list.append(calculator_job_list[i]['nav_id']+1)
                 if old_robot_order_list != current_robot_order_list:
+                    print("===========old_robot_order_list",old_robot_order_list, "current_robot_order_list===========",current_robot_order_list)
                     return False
                 else:
+                    print("===========old_robot_order_list",old_robot_order_list, "current_robot_order_list===========",current_robot_order_list)
                     return True
 
         except Exception as e:
@@ -592,7 +595,7 @@ class taskmanager:
                               GROUP BY j.id, jl.navigation_point_id'''
             value = (robot_id,)
             cursor.execute(sql,tuple(value)) 
-            is_inprogress = cursor.fetchone() #체크 해제된 순간 해당 navigation_point_id의 최신 job_id 불러오기
+            is_inprogress = cursor.fetchall() #체크 해제된 순간 해당 navigation_point_id의 최신 job_id 불러오기
             if is_inprogress:
                 return True
             else:
