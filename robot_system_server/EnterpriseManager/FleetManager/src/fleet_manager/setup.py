@@ -21,7 +21,14 @@ setup(
     entry_points={
         'console_scripts': [
             'fleet_manager_node = fleet_manager.fleet_manager_node:main',
-            'minibot_pos_calibrator = fleet_manager.minibot_pos_calibrate:main'
+            'minibot_pos_calibrator = fleet_manager.minibot_pos_calibrate:main',
+            'fleetmanager_control_ver1 = fleetmanager.fleetmanager_control_ver1:main',
+            'fleetmanager_control_ver2 = fleetmanager.fleetmanager_control_ver2:main',
+            'fleetmanager_control_ver3 = fleetmanager.fleetmanager_control_ver3:main',
+            'fleetmanager_comunication = fleetmanager.fleetmanager_comunication:main',
+            'fleetmanager_control_ver4 = fleetmanager.fleetmanager_control_ver4:main',  
+            'fleetmanager_control_bridge_r0 = fleetmanager.fleetmanager_control_bridge_r0:main',
+            'fleetmanager_control_bridge_r1 = fleetmanager.fleetmanager_control_bridge_r1:main',
         ],
     },
 )
