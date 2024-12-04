@@ -24,3 +24,38 @@
 |개발환경 / 언어|     <img src="https://img.shields.io/badge/Ubuntu 22.04-E95420?style=for-the-badge&logo=Ubuntu&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/VS Code-3E8DCC?style=for-the-badge&logo=coderwall&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/ROS2-22314E?style=for-the-badge&logo=ros&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white">  | 
 |DataBase / GUI     |                    |
 |     |                    |
+
+### 1.4 프로젝트 기간 : 2024. 10. 28 ~ 2024. 11. 25
+
+
+
+## 2 System Design
+
+### 2.1 System Requirements
+
+![image](https://github.com/user-attachments/assets/cc850fba-3d1f-44ad-8e9f-a90d64d4023b)
+
+### 2.2 System Architecture
+![image](https://github.com/user-attachments/assets/ad412b3f-c0e8-423e-af00-5548f3c1e194)
+
+### 2.3 DB설계
+![image](https://github.com/user-attachments/assets/afb0002a-589e-4856-99a9-224e9d044c2c)
+
+### 2.4 Robot Hardware
+![image](https://github.com/user-attachments/assets/950418fd-2e82-48ec-ab5f-e6e0b3f0f777)
+
+### 2.5 Deeplearning Recognition Objects
+![image](https://github.com/user-attachments/assets/ab67711c-25e5-4fff-a896-5023a671fbfd)
+
+
+## 2.6 GUI 
+### 2.6.1 USER / Admin GUI
+![image](https://github.com/user-attachments/assets/b8f66e4c-6509-4a59-a789-78c0c75ee1ac)
+
+### 2.6.2 Admin GUI 
+**①탭을 이동하는 버튼 / ②로봇의 상태 관찰 / ③job의 상태 관찰 / ④job 호출과 로봇의 움직임 관찰**
+![image](https://github.com/user-attachments/assets/bafd7d16-02f5-4bd1-ae09-5124318ae3e3)
+
+**①검색사항 선택 / ②로그 기록**
+![image](https://github.com/user-attachments/assets/76de3caf-6358-4598-a13a-8a599fc2d11a)
+
