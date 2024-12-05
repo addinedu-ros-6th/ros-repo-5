@@ -51,14 +51,20 @@
 ### 2.6 Map
 ![image](https://github.com/user-attachments/assets/6c42a2a8-a8e1-4742-9683-c510ea62ceb0)
 
-## 2.7 GUI 
-### 2.7.1 USER / Admin GUI
+## 3. GUI 
+### 3.1.1 USER / Admin GUI
 ![image](https://github.com/user-attachments/assets/b8f66e4c-6509-4a59-a789-78c0c75ee1ac)
 
-### 2.7.2 Admin GUI 
+### 3.1.2 Admin GUI Map 
 **①탭을 이동하는 버튼 / ②로봇의 상태 관찰 / ③job의 상태 관찰 / ④job 호출과 로봇의 움직임 관찰**
 ![image](https://github.com/user-attachments/assets/bafd7d16-02f5-4bd1-ae09-5124318ae3e3)
 
+### 3.1.3 Admin GUI Log
 **①검색사항 선택 / ②로그 기록**
 ![image](https://github.com/user-attachments/assets/76de3caf-6358-4598-a13a-8a599fc2d11a)
+
+## 4. Trash Bot Demo
+### 4.1 로봇  호출 기능 (24p)
+
+### 4.2 ArUco Marker Align
 
