@@ -20,10 +20,12 @@
 ### 1.3 기술스택 
 
 |분류| 사용기술|
-|-----|-----------------------------------------------------------|
-|개발환경 / 언어|     <img src="https://img.shields.io/badge/Ubuntu 22.04-E95420?style=for-the-badge&logo=Ubuntu&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/VS Code-3E8DCC?style=for-the-badge&logo=coderwall&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/ROS2-22314E?style=for-the-badge&logo=ros&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white">  | 
-|DataBase / GUI     |                    |
-|     |                    |
+|:-----:|-----------------------------------------------------------|
+|개발환경 / 언어|     <img src="https://img.shields.io/badge/Ubuntu 22.04-E95420?style=for-the-badge&logo=Ubuntu&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/VS Code-3E8DCC?style=for-the-badge&logo=VS Code&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/ROS2-22314E?style=for-the-badge&logo=ros&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white">  | 
+|DataBase / GUI     | <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/PyQt5-7FFF00?style=for-the-badge&logo=PyQt5&logoColor=white"> |
+|Network | <img src="https://img.shields.io/badge/ROS2-000000?style=for-the-badge&logo=ROS2&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/TCP / IP-DC143C?style=for-the-badge&logo=TCP / IP&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/Socket-C93CD7?style=for-the-badge&logo=socket&logoColor=white">                  |
+|Hardware| <img src="https://img.shields.io/badge/Arduino Mega 2560-00878F?style=for-the-badge&logo=arduino&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/RasberryPi 4-A22846?style=for-the-badge&logo=raspberrypi&logoColor=white"> |
+|Cooperation Tool|<img src="https://img.shields.io/badge/GITHUB-181717?style=for-the-badge&logo=github&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/CONFLUENCE-172B4D?style=for-the-badge&logo=confluence&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/JIRA-0052CC?style=for-the-badge&logo=jira&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/SLACK-4A154B?style=for-the-badge&logo=slack&logoColor=white"> |
 
 ### 1.4 프로젝트 기간 : 2024. 10. 28 ~ 2024. 11. 25
 
