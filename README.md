@@ -29,7 +29,7 @@
 
 ### 1.4 :date: 프로젝트 기간 : 2024. 10. 28 ~ 2024. 11. 25
 
-
+<img src="https://github.com/user-attachments/assets/1de7b0a0-d7e9-4536-bc06-4a07c8559107" width="950" height="400"/>
 
 ## :pushpin: 2 System Design
 
