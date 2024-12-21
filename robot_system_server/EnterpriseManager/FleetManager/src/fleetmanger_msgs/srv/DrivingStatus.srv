@@ -1,0 +1,4 @@
+string driving_status
+---
+int64 receive_complete
+
