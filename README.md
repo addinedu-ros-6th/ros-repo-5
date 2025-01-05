@@ -27,7 +27,7 @@
 |Hardware| <img src="https://img.shields.io/badge/Arduino Mega 2560-00878F?style=for-the-badge&logo=arduino&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/RasberryPi 4-A22846?style=for-the-badge&logo=raspberrypi&logoColor=white"> |
 |Cooperation Tool|<img src="https://img.shields.io/badge/GITHUB-181717?style=for-the-badge&logo=github&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/CONFLUENCE-172B4D?style=for-the-badge&logo=confluence&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/JIRA-0052CC?style=for-the-badge&logo=jira&logoColor=white"> &nbsp; <img src="https://img.shields.io/badge/SLACK-4A154B?style=for-the-badge&logo=slack&logoColor=white"> |
 
-### 1.4 :date: 프로젝트 기간 : 2024. 10. 28 ~ 2024. 11. 25
+### :date: 1.4 프로젝트 기간 : 2024. 10. 28 ~ 2024. 11. 25
 
 <img src="https://github.com/user-attachments/assets/1de7b0a0-d7e9-4536-bc06-4a07c8559107" width="950" height="400"/>
 
@@ -40,17 +40,20 @@
 ### :clipboard: 2.2 System Architecture
 ![image](https://github.com/user-attachments/assets/ad412b3f-c0e8-423e-af00-5548f3c1e194)
 
-### :clipboard: 2.3 DB설계
+### :clipboard: 2.3 Total Scenario 
+<img src="https://github.com/user-attachments/assets/1d701a95-93e6-4bc1-90ad-469dda688ecc" width="900" height="600">
+
+### :clipboard: 2.4 DB설계
 ![image](https://github.com/user-attachments/assets/afb0002a-589e-4856-99a9-224e9d044c2c)
 
-### :robot: 2.4 Robot Hardware
+### :robot: 2.5 Robot Hardware
 ![image](https://github.com/user-attachments/assets/ab0772fa-7e07-49df-855f-9f118a685284)
 ![image](https://github.com/user-attachments/assets/950418fd-2e82-48ec-ab5f-e6e0b3f0f777)
 
-### :camera: 2.5 Deeplearning Recognition Objects
+### :camera: 2.6 Deeplearning Recognition Objects
 ![image](https://github.com/user-attachments/assets/ab67711c-25e5-4fff-a896-5023a671fbfd)
 
-### :world_map: 2.6 Map
+### :world_map: 2.7 Map
 ![image](https://github.com/user-attachments/assets/6c42a2a8-a8e1-4742-9683-c510ea62ceb0)
 
 ## :pushpin: 3. GUI 
